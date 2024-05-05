@@ -22,6 +22,7 @@ async function TrainModel(model,config){
     let activations = config["activations"]!=null?config["activations"]:['relu', 'relu', 'linear'];
 
     const min_score=config["min_score"]!=null?config["min_score"]:10000;
+    const output_model=config["output_model"]!=null?config["output_model"]:null;
 
     let agent =new DQN(4, discount, replay_mem_size, minibatch_size, epsilon,epsilon_stop_episode, epsilon_min,  learning_rate,'meanSquaredError',tf.train.adam(learning_rate), hidden_dims, activations, replay_start_size, model);
 
@@ -88,7 +89,7 @@ async function TrainModel(model,config){
         
         await agent.train(epochs);
 
-        if(env.score>=min_score||saveModel){
+        if(env.score>=min_score||saveModel||(output_model&&episode==output_model)){
             await agent.model.save("downloads://model");
             saveModel=false;
         }
