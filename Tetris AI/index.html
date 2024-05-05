@@ -100,6 +100,15 @@
                             alert('Not model can load!');
                         }
                     ">Load Model!</button><br>
+                    Model URL:<input id="model-url" value="model/model.json">
+                    <button onclick="
+                        let url=document.getElementById('model-url').value;
+                        if((url!='')&&(url.includes('.json'))){
+                            autoPlayAI.loadModelUrl(url);
+                        }else{
+                            alert('Not model can load!');
+                        }
+                    ">Load Model!</button><br>
                     <button onclick='
                         Tetris_list[1].doPrint=true;
                         Tetris_list[1].print=true;

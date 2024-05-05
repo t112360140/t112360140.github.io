@@ -280,6 +280,10 @@ class autoPlay{
         this.model=await tf.loadLayersModel(tf.io.browserFiles([json, weights]));
     }
     
+    async loadModelUrl(url){
+        this.model=await tf.loadLayersModel(url);
+    }
+    
     get_qs(state) {
         return tf.tidy(() => {return this.model.predict(state).dataSync()[0];});
     }
