@@ -117,7 +117,7 @@ class Tetris{
                         this.start();
                     }
                 }
-                    return false;
+                return false;
             }
             this.NewShape=true;
         }else{
