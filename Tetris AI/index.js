@@ -1,4 +1,3 @@
-//https://github.com/ChesterHuynh/tetrisAI
 
 var scores = [];
 var logs=[];
