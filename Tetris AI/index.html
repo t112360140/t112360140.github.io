@@ -13,8 +13,10 @@
             var isRun=false;
             
             var Tetris_list=[];
-            tf.setBackend('webgpu');
+            tf.setBackend('cpu');
         </script>
+        <button onclick="tf.setBackend('webgpu');">WebGPU</button>
+        <button onclick="tf.setBackend('cpu');">CPU</button>
         <table border=1>
             <tr>
                 <td>
