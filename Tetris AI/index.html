@@ -27,6 +27,7 @@
                     模型訓練
                     <button onclick='
                         async function trainRun(){
+                            console.log("Config:"+JSON.stringify(trainConfig));
                             let time=new Date().getTime();
                             console.log("Start Time: "+Date().toString());
                             await TrainModel(trainModel,trainConfig);
