@@ -66,13 +66,13 @@
                         loadModel();
                     ">Load Model!</button><br>
                     Config:
-                    <textarea cols="30" rows="3" onchange="
+                    <textarea id="train-config" cols="30" rows="3" onchange="
                         try{
                             trainConfig=JSON.parse(this.value);
                         }catch{}
                     ">{"episodes":2000,"epsilon":1,"epsilon_min":0,"epsilon_stop_episode":1000}</textarea>
                     <script>
-                        trainConfig=JSON.parse(this.value);
+                        trainConfig=JSON.parse(document.getElementById("train-config").value);
                     </script>
                 </td>
             </tr>
