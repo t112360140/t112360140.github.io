@@ -59,6 +59,7 @@
                             }
                             if((JSON!=null)&&(Weights!=null)){
                                 trainModel=await tf.loadLayersModel(tf.io.browserFiles([JSON, Weights]));
+                                trainModel.compile({optimizer:tf.train.adam(1e-3), loss:'meanSquaredError'});
                             }else{
                                 trainModel=null;
                                 alert('Not model can load!');
@@ -168,6 +169,7 @@
                             Tetris_list[2].player=true;
                         		Tetris_list[2].start();
                         	}
+                            e.preventDefault();
                         });
                     </script>
                 </td>
