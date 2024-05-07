@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Snake</title>
+        <script src="tfjs/tf.min.js"></script>
+        <script src="tfjs/tf-backend-webgpu.js"></script>
+    
+        <script src="Snake.js"></script>
+        <script src="index.js"></script>
+    </head>
+    <body>
+        <script>
+            var isRun=false;
+            
+            var Snake_list=[];
+            tf.setBackend('cpu');
+        </script>
+        <button onclick="tf.setBackend('webgpu');">WebGPU</button>
+        <button onclick="tf.setBackend('cpu');">CPU</button>
+        <table border=1>
+            <tr>
+                <td>
+                    地圖大小:
+                    <input type="number" value="20" onchange="
+                        let size=Number(this.value);
+                        if(size>0){
+                            for(let i=0;i<Snake_list.length;i++){
+                                const element=Snake_list[i].canvas.parentElement;
+                                element.innerHTML='';
+                                Snake_list[i]=new Snake(element,20,size,size);
+                            }
+                        }
+                    ">
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <script>
+                        var trainModel=null;
+                        var trainConfig={};
+                    </script>
+                    模型訓練
+                    <button onclick='
+                        Snake_list[0].print=true;
+                        async function trainRun(){
+                            console.log("Config:"+JSON.stringify(trainConfig));
+                            let time=new Date().getTime();
+                            console.log("Start Time: "+Date().toString());
+                            await TrainModel(trainModel,trainConfig);
+                            const costTimeS=Math.round(((new Date().getTime())-time)/(1000));
+                            console.log("Finish Time: "+Date().toString()+"\nSpend:"+Math.round(costTimeS/3600)+"hr "+Math.round((costTimeS/60)%60)+"min "+Math.round((costTimeS)%60)+"s");
+                        }
+                        if(!isRun){
+                            isRun=true;
+                            trainRun();
+                            isRun=false;
+                        }
+                    '>Train</button>
+                    <button onclick="
+                        stopTrain=true;
+                    ">Stop</button>
+                    <button onclick="saveModel=true;">Save Model</button><br>
+                    Model:<input type="file" id="train-model" multiple="multiple"/>
+                    <button onclick="
+                        async function loadModel(){
+                            let model=document.getElementById('train-model').files;
+                            let JSON;
+                            let Weights;
+                            for(let i=0;i<model.length;i++){
+                                if(model[i].name.includes('json')){
+                                    JSON=model[i];
+                                }else if(model[i].name.includes('bin')){
+                                    Weights=model[i];
+                                }
+                            }
+                            if((JSON!=null)&&(Weights!=null)){
+                                trainModel=await tf.loadLayersModel(tf.io.browserFiles([JSON, Weights]));
+                                trainModel.compile({optimizer:tf.train.adam(1e-3), loss:'meanSquaredError'});
+                            }else{
+                                trainModel=null;
+                                alert('Not model can load!');
+                            }
+                        }
+                        loadModel();
+                    ">Load Model!</button><br>
+                    Config:
+                    <textarea id="train-config" cols="30" rows="3" onchange="
+                        try{
+                            trainConfig=JSON.parse(this.value);
+                        }catch{}
+                    ">{"episodes":5000,"epsilon":1,"epsilon_min":0,"epsilon_stop_episode":4800,"BMax_add":0.5}</textarea>
+                    <script>
+                        trainConfig=JSON.parse(document.getElementById("train-config").value);
+                    </script>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div><img src onerror="Snake_list.push(new Snake(this.parentElement,20,20,20));Snake_list[Snake_list.length-1].print=true;" style="display:none"></div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    模型測試<br>
+                    Model:<input type="file" id="upload-model" multiple="multiple"/>
+                    <script>
+                        var autoPlayAI=new autoPlay(Snake_list[1]);
+                    </script>
+                    <button onclick="
+                        let model=document.getElementById('upload-model').files;
+                        let JSON;
+                        let Weights;
+                        for(let i=0;i<model.length;i++){
+                            if(model[i].name.includes('json')){
+                                JSON=model[i];
+                            }else if(model[i].name.includes('bin')){
+                                Weights=model[i];
+                            }
+                        }
+                        if((JSON!=null)&&(Weights!=null)){
+                            autoPlayAI.loadModel(JSON,Weights);
+                        }else{
+                            alert('Not model can load!');
+                        }
+                    ">Load Model!</button><br>
+                    Model URL:<input id="model-url" value="model/model.json">
+                    <button onclick="
+                        let url=document.getElementById('model-url').value;
+                        if((url!='')&&(url.includes('.json'))){
+                            autoPlayAI.loadModelUrl(url);
+                        }else{
+                            alert('Not model can load!');
+                        }
+                    ">Load Model!</button><br>
+                    <button onclick='
+                        Snake_list[1].print=true;
+                        autoPlayAI.useAI=true;
+                        async function startAutoPlay(){
+                                Snake_list[1].reset();
+                                Snake_list[1].speed=10;
+                                Snake_list[1].start(autoPlayAI);
+                        }
+                        if(autoPlayAI.model!=null){
+                            startAutoPlay();
+                        }else{
+                            alert("Not model can run!");
+                        }
+                    '>Play</button>
+                    <button onclick='
+                        Snake_list[1].print=true;
+                        autoPlayAI.useAI=false;
+                        async function startAutoPlay(){
+                                Snake_list[1].reset();
+                                Snake_list[1].speed=10;
+                                Snake_list[1].start(autoPlayAI);
+                        }
+                        startAutoPlay();
+                    '>Play not Model</button>
+                    <script>
+                    </script>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div><img src onerror="Snake_list.push(new Snake(this.parentElement,20,20,20));Snake_list[Snake_list.length-1].print=true;" style="display:none"></div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    玩
+                    <button onclick='
+                        Snake_list[2].doPrint=true;
+                        Snake_list[2].print=true;
+                        Snake_list[2].player=true;
+                        Snake_list[2].start();
+                    '>Play</button>
+                    <script>
+                        document.addEventListener('keydown',(e)=>{
+                        	if(e.code==='ArrowUp'){
+                        		Snake_list[2].setFace(0);
+                        	}else if(e.code==='ArrowDown'){
+                        		Snake_list[2].setFace(2);
+                        	}else if(e.code==='ArrowRight'){
+                        		Snake_list[2].setFace(1);
+                        	}else if(e.code==='ArrowLeft'){
+                        		Snake_list[2].setFace(3);
+                        	}else if(e.code==='Space'){
+                                Snake_list[2].print=true;
+                        		Snake_list[2].start();
+                        	}
+                            if(Snake_list[2].isStart){
+                                e.preventDefault();
+                            }
+                        });
+                    </script>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div><img src onerror="Snake_list.push(new Snake(this.parentElement,20,20,20));" style="display:none"></div>
+                </td>
+            </tr>
+        </table>
+    </body>
+</html>
