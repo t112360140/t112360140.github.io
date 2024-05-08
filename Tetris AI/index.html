@@ -155,21 +155,26 @@
                         		
                         	}else if(e.code==='ArrowDown'){
                         		Tetris_list[2].doDrop();
+                                e.preventDefault();
                         	}else if(e.code==='ArrowRight'){
                         		Tetris_list[2].shapeRightMov();
+                                e.preventDefault();
                         	}else if(e.code==='ArrowLeft'){
                         		Tetris_list[2].shapeLeftMov();
+                                e.preventDefault();
                         	}else if(e.code==='KeyZ'){
                         		Tetris_list[2].shapeLeftRot();
+                                e.preventDefault();
                         	}else if(e.code==='KeyX'){
                         		Tetris_list[2].shapeRightRot();
+                                e.preventDefault();
                         	}else if(e.code==='Space'){
                                 Tetris_list[2].doPrint=true;
                                 Tetris_list[2].print=true;
-                            Tetris_list[2].player=true;
+                                Tetris_list[2].player=true;
                         		Tetris_list[2].start();
+                                e.preventDefault();
                         	}
-                            e.preventDefault();
                         });
                     </script>
                 </td>
