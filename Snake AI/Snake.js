@@ -42,7 +42,7 @@ class Snake{
         this.setBerry();
         this.paint();
         const area=this.getArea();
-        return [(this.score+this.long),this.getdic(),area,(this.getSpaceArea()-area)];
+        return [(this.score+this.long),this.getdic(),area[0],area[1],(this.getSpaceArea()-area[0])];
     }
 
     start(nextAction){
@@ -170,26 +170,42 @@ class Snake{
         
     }
 
-    getArea(map,pos){
+    getArea(map,pos,set,first){
         let tMap;
         let tPos;
         let area=0;
         map?tMap=map:tMap=cloneJSON(this.map);
         pos?tPos=pos:tPos=cloneJSON(this.pos);
-        tMap[tPos[1]*this.width+tPos[0]]=-2;
-        if(tPos[1]>0&&tMap[(tPos[1]-1)*this.width+tPos[0]]==0){
-            area+=(1+this.getArea(tMap,[tPos[0],tPos[1]-1]));
+        (set!=null)?set=set:set=-2
+        if(tMap[tPos[1]*this.width+tPos[0]]==0){
+            tMap[tPos[1]*this.width+tPos[0]]=set;
         }
-        if(tPos[0]<(this.width-1)&&tMap[tPos[1]*this.width+(tPos[0]+1)]==0){
-            area+=(1+this.getArea(tMap,[tPos[0]+1,tPos[1]]));
+        if(tPos[1]>=0&&tMap[(tPos[1]-1)*this.width+tPos[0]]==0){
+            area+=(1+this.getArea(tMap,[tPos[0],tPos[1]-1],set,true));
         }
-        if(tPos[1]<(this.height-1)&&tMap[(tPos[1]+1)*this.width+tPos[0]]==0){
-            area+=(1+this.getArea(tMap,[tPos[0],tPos[1]+1]));
+        if(!first)set--;
+        if(tPos[0]<=(this.width-1)&&tMap[tPos[1]*this.width+(tPos[0]+1)]==0){
+            area+=(1+this.getArea(tMap,[tPos[0]+1,tPos[1]],set,true));
         }
-        if(tPos[0]>0&&tMap[tPos[1]*this.width+(tPos[0]-1)]==0){
-            area+=(1+this.getArea(tMap,[tPos[0]-1,tPos[1]]));
+        if(!first)set--;
+        if(tPos[1]<=(this.height-1)&&tMap[(tPos[1]+1)*this.width+tPos[0]]==0){
+            area+=(1+this.getArea(tMap,[tPos[0],tPos[1]+1],set,true));
         }
-        return area;
+        if(!first)set--;
+        if(tPos[0]>=0&&tMap[tPos[1]*this.width+(tPos[0]-1)]==0){
+            area+=(1+this.getArea(tMap,[tPos[0]-1,tPos[1]],set,true));
+        }
+        if(!first){
+            let n=[];
+            for(let i=0;i<this.height*this.width;i++){
+                if(tMap[i]<-1&&!n.includes(tMap[i])){
+                    n.push(tMap[i]);
+                }
+            }
+            return [area,n.length];
+        }else{
+            return area;
+        }
     }
 
     getSpaceArea(){
@@ -230,7 +246,9 @@ class Snake{
             if(this.setFace(i)){
                 if(this.next()){
                     const area=this.getArea();
-                    out.push([i,[(this.score+this.long),(this.score-lastScore)?0:this.getdic(),area,(this.getSpaceArea()-area)]]);
+                    let next_state=[(this.score+this.long),(this.score-lastScore)?0:this.getdic(),area[0],area[1],(this.getSpaceArea()-area[0])];
+                    let next_action=i;
+                    out.push([next_action,next_state]);
                 }
             }
             this.map=cloneJSON(tMap);
