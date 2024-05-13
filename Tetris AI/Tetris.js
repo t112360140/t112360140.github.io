@@ -73,7 +73,7 @@ class Tetris{
         }
     }
     
-    next(nextAction,x,y){
+    async next(nextAction,x,y){
         if(this.shape==null){
             this.newRandShape();
             this.NewShape=true;
@@ -82,7 +82,7 @@ class Tetris{
             this.NewShape=true;
         }
         if(nextAction!=null&&this.NewShape){
-            let action=nextAction.nextAction(this.getNextStatus());
+            let action=await nextAction.nextAction(this.getNextStatus());
             for(let i=0;i<action[1];i++){
                 this.shapeRightRot();
             }

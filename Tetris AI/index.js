@@ -283,17 +283,24 @@ class autoPlay{
         this.model=await tf.loadLayersModel(url);
     }
     
+    async loadLiteModelUrl(url){
+        tflite.setWasmPath(
+            'tfjs/'
+         );
+        this.model=await tflite.loadTFLiteModel(url);
+    }
+    
     get_qs(state) {
         return tf.tidy(() => {return this.model.predict(state).dataSync()[0];});
     }
     
-    best_state(states) {
+    async best_state(states) {
         let max_value = null;
         let best_state = null;
         let n=null;
         
         for(let i=0;i<states.length;i++){
-            const value=this.get_qs(tf.tidy(()=>{return tf.reshape(states[i],[1,this.state_size]);}));
+            const value=await this.get_qs(tf.tidy(()=>{return tf.reshape(states[i],[1,this.state_size]);}));
             if(max_value==null||max_value<value){
                 max_value=value;
                 best_state=states[i];
@@ -303,13 +310,13 @@ class autoPlay{
         return [best_state,n];
     }
     
-    nextAction(states){
+    async nextAction(states){
         let temp=[];
         for(let i=0;i<states.length;i++){
             temp.push(states[i][1]);
         }
         
-        let bestState=this.best_state(temp);
+        let bestState=await this.best_state(temp);
         return (states[bestState[1]][0]);
     }
 }

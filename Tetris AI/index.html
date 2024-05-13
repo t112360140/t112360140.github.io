@@ -4,6 +4,7 @@
         <title>Tetris</title>
         <script src="tfjs/tf.min.js"></script>
         <script src="tfjs/tf-backend-webgpu.js"></script>
+        <script src="tfjs/tf-tflite.min.js"></script>
     
         <script src="Tetris.js"></script>
         <script src="index.js"></script>
@@ -95,6 +96,7 @@
                         let model=document.getElementById('upload-model').files;
                         let JSON;
                         let Weights;
+                        let Tflite;
                         for(let i=0;i<model.length;i++){
                             if(model[i].name.includes('json')){
                                 JSON=model[i];
@@ -113,6 +115,8 @@
                         let url=document.getElementById('model-url').value;
                         if((url!='')&&(url.includes('.json'))){
                             autoPlayAI.loadModelUrl(url);
+                        }else if((url!='')&&(url.includes('.tflite'))){
+                            autoPlayAI.loadLiteModelUrl(url);
                         }else{
                             alert('Not model can load!');
                         }
