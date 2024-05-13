@@ -6,7 +6,6 @@ class Tetris{
     height=22;
     width=10;
     table=[];
-    shape=null;
     isStart=false;
     speed=200;
     print=true;
@@ -14,9 +13,10 @@ class Tetris{
     player=false;
     lastMax=0;
     MaxScore=0;
-    nextShape=null;
+    shapePool=[];
+    poolSize=7;
     NewShape=false;
-    AITestPaint=true;
+    AITestPaint=false;
     
     color=["00f0f0","0000f0","f0a000","f0f000","00f000","a000f0","f00000"];
     shapePos=[
@@ -134,7 +134,7 @@ class Tetris{
                 this.table[i*this.width+j]=0;
             }
         }
-        this.shape=null;
+        this.shapePool=[];
         this.numDelLines=0;
         this.score=0;
         this.lastMax=0;
@@ -145,13 +145,14 @@ class Tetris{
     }
     
     newRandShape(){
-        if(this.nextShape==null){
-            this.nextShape=getRandom(0,6);
-            // this.nextShape=3;
+        if(this.shapePool[1]==undefined){
+            this.shapePool=this.genRandPool(2);
         }
-        let next=this.nextShape;
-        this.nextShape=getRandom(0,6);
-        // this.nextShape=3;
+        if(this.shapePool[2]==undefined){
+            this.shapePool=this.shapePool.concat(this.genRandPool(this.poolSize));
+        }
+        const next=this.shapePool[0];
+        this.shapePool.shift();
         return this.newShape(next);
     }
     
@@ -169,6 +170,27 @@ class Tetris{
         }
     }
     
+    genRandPool(n){
+        n<=7?n=n:n=7;
+        let temp=[];
+        for(let i=0;i<n;i++){
+            while(1){
+                const rand=getRandom(0,6);
+                let exist=false;
+                for(let j=0;j<temp.length;j++){
+                    if(temp[j]==rand){
+                        exist=true;
+                    }
+                }
+                if(!exist){
+                    temp.push(rand);
+                    break;
+                }
+            }
+        }
+        return temp;
+    }
+
     tryMove(shape){
         if(shape!=null){
             let out=false;
@@ -352,10 +374,10 @@ class Tetris{
             ctx.fillRect((this.width+1)*this.blockW,(0)*this.blockW,4*this.blockW,(this.height+1)*this.blockW);
             ctx.fillStyle="#000000";
             ctx.fillRect((this.width+1.25)*this.blockW,(0.5)*this.blockW,3.5*this.blockW,3*this.blockW);
-            if(this.nextShape!=null){
-                ctx.fillStyle="#"+this.color[this.nextShape];
+            if(this.shapePool[1]!=null){
+                ctx.fillStyle="#"+this.color[this.shapePool[1]];
                 for(let i=0;i<4;i++){
-                    ctx.fillRect((this.width+2.5)*this.blockW+(this.shapePos[this.nextShape][i][0]+0.5)*(this.blockW/2),(1.5)*this.blockW+(this.shapePos[this.nextShape][i][1]+0.5)*(this.blockW/2),(this.blockW/2),(this.blockW/2));
+                    ctx.fillRect((this.width+2.5)*this.blockW+(this.shapePos[this.shapePool[1]][i][0]+0.5)*(this.blockW/2),(1.5)*this.blockW+(this.shapePos[this.shapePool[1]][i][1]+0.5)*(this.blockW/2),(this.blockW/2),(this.blockW/2));
                 }
             }
         }
