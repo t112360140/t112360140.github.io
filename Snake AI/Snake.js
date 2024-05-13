@@ -192,10 +192,48 @@ class Snake{
         return area;
     }
 
+    // getArea(map,pos,set,first){
+    //     let tMap;
+    //     let tPos;
+    //     let area=0;
+    //     map?tMap=map:tMap=cloneJSON(this.map);
+    //     pos?tPos=pos:tPos=cloneJSON(this.pos);
+    //     (set!=null)?set=set:set=-2
+    //     if(tMap[tPos[1]*this.width+tPos[0]]==0||tMap[tPos[1]*this.width+tPos[0]]==-1){
+    //         tMap[tPos[1]*this.width+tPos[0]]=set;
+    //     }
+    //     if(tPos[1]>=0&&(tMap[(tPos[1]-1)*this.width+tPos[0]]==0||tMap[(tPos[1]-1)*this.width+tPos[0]]==-1)){
+    //         area+=(1+this.getArea(tMap,[tPos[0],tPos[1]-1],set,true));
+    //     }
+    //     if(!first)set--;
+    //     if(tPos[0]<=(this.width-1)&&(tMap[tPos[1]*this.width+(tPos[0]+1)]==0||tMap[tPos[1]*this.width+(tPos[0]+1)]==-1)){
+    //         area+=(1+this.getArea(tMap,[tPos[0]+1,tPos[1]],set,true));
+    //     }
+    //     if(!first)set--;
+    //     if(tPos[1]<=(this.height-1)&&(tMap[(tPos[1]+1)*this.width+tPos[0]]==0||tMap[(tPos[1]+1)*this.width+tPos[0]]==-1)){
+    //         area+=(1+this.getArea(tMap,[tPos[0],tPos[1]+1],set,true));
+    //     }
+    //     if(!first)set--;
+    //     if(tPos[0]>=0&&(tMap[tPos[1]*this.width+(tPos[0]-1)]==0||tMap[tPos[1]*this.width+(tPos[0]-1)]==-1)){
+    //         area+=(1+this.getArea(tMap,[tPos[0]-1,tPos[1]],set,true));
+    //     }
+    //     if(!first){
+    //         let n=[];
+    //         for(let i=0;i<this.height*this.width;i++){
+    //             if(tMap[i]<-1&&!n.includes(tMap[i])){
+    //                 n.push(tMap[i]);
+    //             }
+    //         }
+    //         return [area,n.length];
+    //     }else{
+    //         return area;
+    //     }
+    // }
+
     getSpaceArea(){
         let area=0;
         for(let i=0;i<this.height*this.width;i++){
-            if(this.map[i]==0){
+            if(this.map[i]<=0){
                 area++;
             }
         }

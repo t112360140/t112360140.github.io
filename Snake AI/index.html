@@ -16,6 +16,7 @@
             tf.setBackend('cpu');
         </script>
         <button onclick="tf.setBackend('webgpu');">WebGPU</button>
+        <button onclick="tf.setBackend('webgl');">WebGL</button>
         <button onclick="tf.setBackend('cpu');">CPU</button>
         <table border=1>
             <tr>
@@ -96,7 +97,7 @@
             </tr>
             <tr>
                 <td>
-                    <div><img src onerror="Snake_list.push(new Snake(this.parentElement,20,20,20));Snake_list[Snake_list.length-1].print=true;" style="display:none"></div>
+                    <div><img src onerror="Snake_list.push(new Snake(this.parentElement,20,20,20));Snake_list[Snake_list.length-1].speed=1;" style="display:none"></div>
                 </td>
             </tr>
             <tr>

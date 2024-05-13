@@ -7,17 +7,17 @@ var stopTrain=false;
 async function TrainModel(model,config){
     let env = config["env"]!=null?config["env"]:Snake_list[0];
     let episodes = config["episodes"]!=null?config["episodes"]:5000;
-    let max_steps = config["max_steps"]!=null?config["max_steps"]:5000;
+    let max_steps = config["max_steps"]!=null?config["max_steps"]:500000;
     let discount = config["discount"]!=null?config["discount"]:0.98;
-    let replay_mem_size = config["replay_mem_size"]!=null?config["replay_mem_size"]:20000;
-    let minibatch_size = config["minibatch_size"]!=null?config["minibatch_size"]:512;
+    let replay_mem_size = config["replay_mem_size"]!=null?config["replay_mem_size"]:8192;
+    let minibatch_size = config["minibatch_size"]!=null?config["minibatch_size"]:8192;
     let epsilon = config["epsilon"]!=null?config["epsilon"]:1;
     let epsilon_min = config["epsilon_min"]!=null?config["epsilon_min"]:0;
     let epsilon_stop_episode = config["epsilon_stop_episode"]!=null?config["epsilon_stop_episode"]:4500;
-    let learning_rate = config["learning_rate"]!=null?config["learning_rate"]:5e-3;
+    let learning_rate = config["learning_rate"]!=null?config["learning_rate"]:1e-2;
     let epochs = config["epochs"]!=null?config["epochs"]:1;
     let show_every = config["show_every"]!=null?config["show_every"]:50;
-    let replay_start_size = config["replay_start_size"]!=null?config["replay_start_size"]:2000;
+    let replay_start_size = config["replay_start_size"]!=null?config["replay_start_size"]:8192;
     let hidden_dims = config["hidden_dims"]!=null?config["hidden_dims"]:[64, 64];
     let activations = config["activations"]!=null?config["activations"]:['relu', 'relu', 'linear'];
 
@@ -34,7 +34,7 @@ async function TrainModel(model,config){
     stopTrain=false;
     saveModel=false;
     let BMin=config["BMin"]!=null?config["BMin"]:30;
-    let BMax=config["BMax"]!=null?config["BMax"]:100000;
+    let BMax=config["BMax"]!=null?config["BMax"]:500;
     
     for(let episode=0;episode<episodes;episode++){
         let current_state = env.reset();
@@ -55,7 +55,7 @@ async function TrainModel(model,config){
                 temp[i]=next_states[i][1];
             }
             if(temp[0]==undefined){
-                agent.update_replay_memory(current_state, 0, current_state, -50, true);
+                agent.update_replay_memory(current_state, 0, current_state, -5, true);
                 break;
             }
             const best_state=agent.best_state(temp);
@@ -67,20 +67,21 @@ async function TrainModel(model,config){
             let reward=(1*(Bstep/BMin)+ret["score"]*10);
             if(ret["score"]>0){
                 Bstep=BMin;
-                if(BMin+Bstep_add<=BMax){
+                if((BMin+Bstep_add)<=BMax){
                     BMin+=Bstep_add;
                 }
             }
             Bstep--;
             if(done){
-                reward=-50;
+                reward=-5;
             }else if(Bstep<0){
                 done=true;
-                reward=-50;
+                reward=-5;
             }
 
             if(env.print){
-                await env.paint();
+                env.paint();
+                // await tf.nextFrame();
             }
 
             agent.update_replay_memory(current_state, best_action, next_states[best_index][1], reward, done);
@@ -143,7 +144,7 @@ class DQN {
         this.optimizer = optimizer;
         this.hidden_dims = hidden_dims;
         this.activations = activations;
-        if(replay_start_size!=null){
+        if(replay_start_size==null){
             replay_start_size = replay_mem_size / 2
         }
         this.replay_start_size = replay_start_size
@@ -288,86 +289,6 @@ class ReplayMemory {
         return out;
     }
 }
-
-/**
-class DQN {
-    constructor(state_size = 4, discount = 0.98, epsilon = 1,
-        epsilon_stop_episode = 1500, epsilon_min = 1e-3,
-        learning_rate = 1e-3, loss = 'meanSquaredError',
-        optimizer = tf.train.adam(1e-3), hidden_dims = [64, 64],
-        activations = ['relu', 'relu', 'linear'],model=null) {
-        this.state_size = state_size;
-        this.discount = discount;
-        this.epsilon = epsilon;
-        this.epsilon_min = epsilon_min;
-        this.epsilon_decay = (this.epsilon - this.epsilon_min) / epsilon_stop_episode;
-        this.learning_rate = learning_rate;
-        this.loss = loss;
-        this.optimizer = optimizer;
-        this.hidden_dims = hidden_dims;
-        this.activations = activations;
-
-        if(model==null){
-            this.model = this.createModel();
-        }else{
-            this.model=model;
-        }
-    }
-
-    createModel() {
-        const model = tf.sequential();
-        model.add(tf.layers.dense({ units: this.hidden_dims[0], inputShape: this.state_size, activation: this.activations[0]}));
-        for (let i = 1; i < this.activations; i++) {
-            model.add(tf.layers.dense({ units: this.hidden_dims[i], activation: this.activations[i] }));
-        }
-        model.add(tf.layers.dense({ units: 1, activation: this.activations[this.activations.length - 1] }));
-
-        model.compile({optimizer:this.optimizer, loss:this.loss});
-
-        return model;
-    }
-
-    get_qs(state) {
-        return tf.tidy(() => {return this.model.predict(state).dataSync()[0];});
-    }
-
-    best_state(states) {
-        let max_value = null;
-        let best_state = null;
-
-        if (Math.random() <= this.epsilon) {
-            const i=getRandom(0,(states.length-1));
-            return [states[i],i];
-        }else{
-            let n=null
-            for(let i=0;i<states.length;i++){
-                const value=this.get_qs(tf.tidy(()=>{return tf.reshape(states[i],[1,this.state_size]);}));
-                if(max_value==null||max_value<value){
-                    max_value=value;
-                    best_state=states[i];
-                    n=i;
-                }
-            }
-            return [best_state,n];
-        }
-    }
-
-    async train(state,next_state,reward,epochs=3){
-
-        let temp=this.get_qs(tf.tidy(()=>{return tf.reshape(next_state,[1,this.state_size]);}));
-
-        let new_q=reward+this.discount*temp;
-        
-        await this.model.fit(tf.tensor([state]), tf.tensor([new_q]), {batch_size:1, epochs:epochs, verbose:0});
-    }
-
-    setEpsilon(){
-        if (this.epsilon > this.epsilon_min){
-            this.epsilon -= this.epsilon_decay;
-        }
-    }
-}
-**/
 
 class autoPlay{
     
