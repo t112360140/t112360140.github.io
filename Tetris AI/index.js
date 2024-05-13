@@ -6,15 +6,15 @@ var stopTrain=false;
 
 async function TrainModel(model,config){
     let env = config["env"]!=null?config["env"]:Tetris_list[0];
-    let episodes = config["episodes"]!=null?config["episodes"]:3500;
-    let max_steps = config["max_steps"]!=null?config["max_steps"]:10000;
-    let discount = config["discount"]!=null?config["discount"]:0.98;
+    let episodes = config["episodes"]!=null?config["episodes"]:2000;
+    let max_steps = config["max_steps"]!=null?config["max_steps"]:50000;
+    let discount = config["discount"]!=null?config["discount"]:0.99;
     let replay_mem_size = config["replay_mem_size"]!=null?config["replay_mem_size"]:20000;
     let minibatch_size = config["minibatch_size"]!=null?config["minibatch_size"]:512;
     let epsilon = config["epsilon"]!=null?config["epsilon"]:1;
     let epsilon_min = config["epsilon_min"]!=null?config["epsilon_min"]:0;
     let epsilon_stop_episode = config["epsilon_stop_episode"]!=null?config["epsilon_stop_episode"]:2000;
-    let learning_rate = config["learning_rate"]!=null?config["learning_rate"]:5e-3;
+    let learning_rate = config["learning_rate"]!=null?config["learning_rate"]:1e-2;
     let epochs = config["epochs"]!=null?config["epochs"]:1;
     let show_every = config["show_every"]!=null?config["show_every"]:50;
     let replay_start_size = config["replay_start_size"]!=null?config["replay_start_size"]:2000;
@@ -121,7 +121,7 @@ class DQN {
         this.optimizer = optimizer;
         this.hidden_dims = hidden_dims;
         this.activations = activations;
-        if(replay_start_size!=null){
+        if(replay_start_size==null){
             replay_start_size = replay_mem_size / 2
         }
         this.replay_start_size = replay_start_size
@@ -266,7 +266,6 @@ class ReplayMemory {
         return out;
     }
 }
-
 
 class autoPlay{
     
