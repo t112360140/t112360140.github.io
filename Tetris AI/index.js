@@ -270,6 +270,7 @@ class ReplayMemory {
 class autoPlay{
     
     state_size=4;
+    noModel=false;
     
     constructor(game){
         this.game=game;
@@ -299,12 +300,21 @@ class autoPlay{
         let best_state = null;
         let n=null;
         
-        for(let i=0;i<states.length;i++){
-            const value=await this.get_qs(tf.tidy(()=>{return tf.reshape(states[i],[1,this.state_size]);}));
-            if(max_value==null||max_value<value){
-                max_value=value;
-                best_state=states[i];
-                n=i;
+        if(this.noModel){
+            for(let i=0;i<states.length;i++){
+                if((states[i][0]*10-states[i][1]*2-states[i][2]-states[i][3])>max_value||max_value==null){
+                    max_value=(states[i][0]*10-states[i][1]*2-states[i][2]-states[i][3]);
+                    n=i;
+                }
+            }
+        }else{
+            for(let i=0;i<states.length;i++){
+                const value=await this.get_qs(tf.tidy(()=>{return tf.reshape(states[i],[1,this.state_size]);}));
+                if(max_value==null||max_value<value){
+                    max_value=value;
+                    best_state=states[i];
+                    n=i;
+                }
             }
         }
         return [best_state,n];

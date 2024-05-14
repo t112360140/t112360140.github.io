@@ -136,6 +136,18 @@
                             alert("Not model can run!");
                         }
                     '>Play</button>
+                    <button onclick='
+                        Tetris_list[1].doPrint=true;
+                        Tetris_list[1].print=true;
+                        Tetris_list[1].player=true;
+                        Tetris_list[1].speed=20;
+                        async function startAutoPlay(){
+                            Tetris_list[1].reset();
+                            autoPlayAI.noModel=true;
+                            Tetris_list[1].autoPlay(autoPlayAI);
+                        }
+                        startAutoPlay();
+                    '>Play (Not Model)</button>
                     <script>
                     </script>
                 </td>
