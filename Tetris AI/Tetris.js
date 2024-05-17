@@ -450,6 +450,8 @@ class Tetris{
 
     getNextStatus(){
         let out=[];
+	let isDoPrint=this.doPrint;
+	this.doPrint=false;
         let tableBackup=cloneJSON(this.table);
         let shapeBackup=cloneJSON(this.shape);
         for(let i=0;i<this.width;i++){
@@ -478,6 +480,7 @@ class Tetris{
         }
         this.table=cloneJSON(tableBackup);
         this.shape=cloneJSON(shapeBackup);
+	this.doPrint=isDoPrint;
         return out;
     }
     
