@@ -302,8 +302,8 @@ class autoPlay{
         
         if(this.noModel){
             for(let i=0;i<states.length;i++){
-                if((states[i][0]*10-states[i][1]*2-states[i][2]-states[i][3])>max_value||max_value==null){
-                    max_value=(states[i][0]*10-states[i][1]*2-states[i][2]-states[i][3]);
+                if((states[i][0]*10-states[i][1]*10-states[i][2]-states[i][3])>max_value||max_value==null){
+                    max_value=(states[i][0]*10-states[i][1]*10-states[i][2]-states[i][3]);
                     n=i;
                 }
             }
