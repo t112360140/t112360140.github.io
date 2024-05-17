@@ -128,6 +128,7 @@
                         Tetris_list[1].speed=20;
                         async function startAutoPlay(){
                                 Tetris_list[1].reset();
+                                autoPlayAI.noModel=false;
                                 Tetris_list[1].autoPlay(autoPlayAI);
                         }
                         if(autoPlayAI.model!=null){
