@@ -42,25 +42,25 @@ class Tetris{
         canvas.getContext("2d").fillRect(0,0,(this.width+5)*this.blockW,(this.height+1)*this.blockW)
         this.canvas=element.appendChild(canvas);
         this.paint();
-        this.reset(10,22);
+        this.reset(this.width,this.height);
     }
     
-    start(x,y){
+    start(){
         if(this.isStart){
             clearInterval(this.loop);
             this.isStart=false;
         }else{
-            this.loop=setInterval(()=>{this.next(x,y)},this.speed);
+            this.loop=setInterval(()=>{this.next()},this.speed);
             this.isStart=true;
         }
     }
     
-    autoPlay(nextAction,x,y){
+    autoPlay(nextAction){
         if(this.isStart){
             clearInterval(this.loop);
             this.isStart=false;
         }else{
-            this.loop=setInterval(()=>{this.next(nextAction,x,y)},this.speed);
+            this.loop=setInterval(()=>{this.next(nextAction)},this.speed);
             this.isStart=true;
         }
     }
@@ -73,7 +73,7 @@ class Tetris{
         }
     }
     
-    async next(nextAction,x,y){
+    async next(nextAction){
         if(this.shape==null){
             this.newRandShape();
             this.NewShape=true;
@@ -127,8 +127,8 @@ class Tetris{
     }
     
     reset(x,y){
-        x>0?this.width=x:this.width=10;
-        y>0?this.height=y:this.height=22;
+        x>0?this.width=x:0;
+        y>0?this.height=y:0;
         for(let i=0;i<this.height;i++){
             for(let j=0;j<this.width;j++){
                 this.table[i*this.width+j]=0;
@@ -157,7 +157,7 @@ class Tetris{
     }
     
     newShape(type){
-        let shape={type:type,pos:[4,2],shape:this.shapePos[type],angle:0,stop:0};
+        let shape={type:type,pos:[Math.floor(this.width/2)-1,2],shape:this.shapePos[type],angle:0,stop:0};
         if(this.tryMove(shape)){
             this.shape=cloneJSON(shape);
             if(this.doPrint){
@@ -450,8 +450,8 @@ class Tetris{
 
     getNextStatus(){
         let out=[];
-	let isDoPrint=this.doPrint;
-	this.doPrint=false;
+        let isDoPrint=this.doPrint;
+        this.doPrint=false;
         let tableBackup=cloneJSON(this.table);
         let shapeBackup=cloneJSON(this.shape);
         for(let i=0;i<this.width;i++){
@@ -480,7 +480,7 @@ class Tetris{
         }
         this.table=cloneJSON(tableBackup);
         this.shape=cloneJSON(shapeBackup);
-	this.doPrint=isDoPrint;
+	    this.doPrint=isDoPrint;
         return out;
     }
     
