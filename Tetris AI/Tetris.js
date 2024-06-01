@@ -377,7 +377,7 @@ class Tetris{
             if(this.shapePool[0]!=null){
                 ctx.fillStyle="#"+this.color[this.shapePool[0]];
                 for(let i=0;i<4;i++){
-                    ctx.fillRect((this.width+2.5)*this.blockW+(this.shapePos[this.shapePool[1]][i][0]+0.5)*(this.blockW/2),(1.5)*this.blockW+(this.shapePos[this.shapePool[1]][i][1]+0.5)*(this.blockW/2),(this.blockW/2),(this.blockW/2));
+                    ctx.fillRect((this.width+2.5)*this.blockW+(this.shapePos[this.shapePool[0]][i][0]+0.5)*(this.blockW/2),(1.5)*this.blockW+(this.shapePos[this.shapePool[0]][i][1]+0.5)*(this.blockW/2),(this.blockW/2),(this.blockW/2));
                 }
             }
         }
