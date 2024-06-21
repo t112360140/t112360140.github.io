@@ -121,6 +121,10 @@
                             alert('Not model can load!');
                         }
                     ">Load Model!</button><br>
+                    掉落動畫:
+                    <input type="checkbox" onchange='
+                        Tetris_list[1].AITestPrint=!this.checked;
+                    '>
                     <button onclick='
                         Tetris_list[1].doPrint=true;
                         Tetris_list[1].print=true;
