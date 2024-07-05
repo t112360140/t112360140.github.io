@@ -85,11 +85,11 @@
                         loadModel();
                     ">Load Model!</button><br>
                     Config:
-                    <textarea id="train-config" cols="30" rows="3" onchange="
+                    <textarea id="train-config" cols="30" rows="5" onchange="
                         try{
                             trainConfig=JSON.parse(this.value);
                         }catch{}
-                    ">{"episodes":5000,"epsilon":1,"epsilon_min":0,"epsilon_stop_episode":4800,"BMax_add":0.5}</textarea>
+                    ">{"episodes":5300,"epsilon":1,"epsilon_min":0,"epsilon_stop_episode":4000,"BMax":150,"BMin":20,"Bstart":800,"Bstop":4700}</textarea>
                     <script>
                         trainConfig=JSON.parse(document.getElementById("train-config").value);
                     </script>
@@ -138,7 +138,7 @@
                         autoPlayAI.useAI=true;
                         async function startAutoPlay(){
                                 Snake_list[1].reset();
-                                Snake_list[1].speed=10;
+                                Snake_list[1].speed=20;
                                 Snake_list[1].start(autoPlayAI);
                         }
                         if(autoPlayAI.model!=null){
@@ -151,9 +151,9 @@
                         Snake_list[1].print=true;
                         autoPlayAI.useAI=false;
                         async function startAutoPlay(){
-                                Snake_list[1].reset();
-                                Snake_list[1].speed=10;
-                                Snake_list[1].start(autoPlayAI);
+                            Snake_list[1].reset();
+                            Snake_list[1].speed=20;
+                            Snake_list[1].start(autoPlayAI);
                         }
                         startAutoPlay();
                     '>Play not Model</button>
