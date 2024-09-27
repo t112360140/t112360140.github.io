@@ -15,6 +15,10 @@ else
 case
 for
 while
+and
+or
+for
+not
 ~
 &
 |
