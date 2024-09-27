@@ -17,7 +17,7 @@ for
 while
 and
 or
-for
+xor
 not
 ~
 &
