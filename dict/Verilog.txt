@@ -5,6 +5,7 @@ output
 wire
 reg
 integer
+assign
 initial
 always
 begin
