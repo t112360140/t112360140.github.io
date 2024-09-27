@@ -13,6 +13,8 @@ if
 else if
 else
 case
+default
+endcase
 for
 while
 and
