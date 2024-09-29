@@ -32,6 +32,46 @@ h_code_text.addEventListener('input',()=>{
     h_compile();
 });
 
+window.addEventListener('keydown',(e)=>{
+    if(e.ctrlKey){
+        if(e.code=='KeyS'){
+            const text=JSON.stringify({'HLPL':h_code_text.value,'ASL':code_text.value});
+            let blob = new Blob([text],{type:'text/plain'});
+            let link=document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.download='code.txt';
+            link.click();
+            e.preventDefault(); 
+            return false;
+        }
+    }
+});
+
+function load_code(){
+    const file_uplad=document.createElement('input');
+    file_uplad.type='file';
+    file_uplad.addEventListener('change',(e)=>{
+        const input = e.target
+        if ('files' in input&&input.files.length>0) {
+            const reader=new FileReader();
+            reader.onload=e=>{
+                const content=JSON.parse(e.target.result);
+                if(content['HLPL']&&content['HLPL']!=''){
+                    h_code_text.value=content['HLPL'];
+                    h_compile();
+                    h_set_number();
+                }else if(content['ASL']&&content['ASL']!=''){
+                    code_text.value=content['ASL'];
+                    compile();
+                    set_number();
+                }
+            }
+            reader.readAsText(input.files[0]);
+        }
+    });
+    file_uplad.click();
+}
+
 function set_number(){
     lines.value='';
     let line_context=code_text.value.split('\n');
@@ -96,40 +136,47 @@ function compile(){
         error.push('');
         code[i]=code[i].split('//')[0];
         if(code[i]!=''){
-            let cut=code[i].replaceAll(/\s+/g,' ').replace(' ',',').split(',');
-            if(!cut[1]){
-                cut[1]='0';
-            }
-            cut[1]=cut[1].replaceAll(' ','');
-            if(syntax.indexOf(cut[0])>=0){
-                let num=Number(cut[1]);
-                if(cut[1].slice(0,2)=='0b'){
-                    num=parseInt(cut[1].slice(2,cut[1].length),2);
-                }else if(cut[1].slice(0,2)=='0x'){
-                    num=parseInt(cut[1].slice(2,cut[1].length),16);
-                }
-                if(isNaN(num)){
-                    num=0;
-                }
-                if(!(limit[syntax.indexOf(cut[0])][0]>num&&num>=limit[syntax.indexOf(cut[0])][1])){
-                    error[i]='The number '+cut_string(cut[1])+'('+cut_string(num)+') is out of range!';
-                    num=0;
-                }
-                code[i]=syntax.indexOf(cut[0])*(2**(bit))+num;
+            if(i>=(2**bit)){
+                error[i]='Too many command!';
             }else{
-                if(cut[0].length>0){
-                    error[i]=cut_string(cut[0])+' is not a command!';
+                let cut=code[i].replaceAll(/\s+/g,' ').replace(' ',',').split(',');
+                if(!cut[1]){
+                    cut[1]='0';
                 }
-                code[i]=0;
-            }
-            if(k%8==0){
-                if(k>0){
-                    output+='\n';
+                cut[1]=cut[1].replaceAll(' ','');
+                if(syntax.indexOf(cut[0])>=0){
+                    let num=Number(cut[1]);
+                    if(cut[1].slice(0,2)=='0b'){
+                        num=parseInt(cut[1].slice(2,cut[1].length),2);
+                    }else if(cut[1].slice(0,2)=='0x'){
+                        num=parseInt(cut[1].slice(2,cut[1].length),16);
+                    }else if(cut[1].slice(0,2)=='0o'){
+                        num=parseInt(cut[1].slice(2,cut[1].length),8);
+                    }
+                    if(isNaN(num)){
+                        error[i]='"'+cut[1]+'" is not a number!';
+                        num=0;
+                    }
+                    if(!(limit[syntax.indexOf(cut[0])][0]>num&&num>=limit[syntax.indexOf(cut[0])][1])){
+                        error[i]='The number '+cut_string(cut[1])+'('+cut_string(num)+') is out of range!';
+                        num=0;
+                    }
+                    code[i]=syntax.indexOf(cut[0])*(2**(bit))+num;
+                }else{
+                    if(cut[0].length>0){
+                        error[i]=cut_string(cut[0])+' is not a command!';
+                    }
+                    code[i]=0;
                 }
-                output+=k+': ';
+                if(k%8==0){
+                    if(k>0){
+                        output+='\n';
+                    }
+                    output+=k+': ';
+                }
+                output+=code[i]+' ';
+                k++;
             }
-            output+=code[i]+' ';
-            k++;
         }
     }
     encode_text.value=output;
@@ -218,6 +265,8 @@ function h_compile(){
                             num=parseInt(cut[1][1].slice(2,cut[1][1].length),2);
                         }else if(cut[1][1].slice(0,2)=='0x'){
                             num=parseInt(cut[1][1].slice(2,cut[1][1].length),16);
+                        }else if(cut[1][1].slice(0,2)=='0o'){
+                            num=parseInt(cut[1][1].slice(2,cut[1][1].length),8);
                         }
                     }
                     if(isNaN(num)){
@@ -290,6 +339,8 @@ function h_compile(){
                         num=parseInt(cut[1][0].slice(2,cut[1][0].length),2);
                     }else if(cut[1][0].slice(0,2)=='0x'){
                         num=parseInt(cut[1][0].slice(2,cut[1][0].length),16);
+                    }else if(cut[1][0].slice(0,2)=='0o'){
+                        num=parseInt(cut[1][0].slice(2,cut[1][0].length),8);
                     }
                 }
                 if(isNaN(num)){
@@ -325,6 +376,8 @@ function h_compile(){
                             num=parseInt(cut[1][1].slice(2,cut[1][1].length),2);
                         }else if(cut[1][1].slice(0,2)=='0x'){
                             num=parseInt(cut[1][1].slice(2,cut[1][1].length),16);
+                        }else if(cut[1][1].slice(0,2)=='0o'){
+                            num=parseInt(cut[1][1].slice(2,cut[1][1].length),8);
                         }
                     }
                     if(isNaN(num)){
@@ -358,6 +411,8 @@ function h_compile(){
                             num=parseInt(cut[1][1].slice(2,cut[1][1].length),2);
                         }else if(cut[1][1].slice(0,2)=='0x'){
                             num=parseInt(cut[1][1].slice(2,cut[1][1].length),16);
+                        }else if(cut[1][1].slice(0,2)=='0o'){
+                            num=parseInt(cut[1][1].slice(2,cut[1][1].length),8);
                         }
                     }
                     if(isNaN(num)){
