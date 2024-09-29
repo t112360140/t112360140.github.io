@@ -134,17 +134,17 @@ function compile(){
     let k=0;
     for(let i=0;i<code.length;i++){
         error.push('');
-        code[i]=code[i].split('//')[0];
+        code[i]=code[i].replace(/^\s+/g,'').split('//')[0];
         if(code[i]!=''){
             if(i>=(2**bit)){
                 error[i]='Too many command!';
             }else{
                 let cut=code[i].replaceAll(/\s+/g,' ').replace(' ',',').split(',');
-                if(!cut[1]){
-                    cut[1]='0';
-                }
-                cut[1]=cut[1].replaceAll(' ','');
                 if(syntax.indexOf(cut[0])>=0){
+                    if(!cut[1]){
+                        cut[1]='0';
+                    }
+                    cut[1]=cut[1].replaceAll(' ','');
                     let num=Number(cut[1]);
                     if(cut[1].slice(0,2)=='0b'){
                         num=parseInt(cut[1].slice(2,cut[1].length),2);
