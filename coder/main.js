@@ -110,7 +110,7 @@ function print_error(err){
         }
         output+=err[i]+'\n';
     }
-    error_text.cols=((max_long>3)?(max_long-2):1);
+    error_text.cols=((max_long>3)?(max_long):3);
     error_text.value=output;
     error_count.value='';
     if(error_counter){
@@ -239,7 +239,7 @@ function h_print_error(err){
         }
         output+=err[i]+'\n';
     }
-    h_error_text.cols=((max_long>3)?(max_long-2):1);
+    h_error_text.cols=((max_long>3)?(max_long):3);
     h_error_text.value=output;
 }
 
