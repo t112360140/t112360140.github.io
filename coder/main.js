@@ -80,7 +80,7 @@ function set_number(){
     }
     let k=0;
     for(let i=0;i<line_context.length;i++){
-        if((line_context[i].split('//')[0]&&line_context[i].split('//')[0]!='')||i>=line_context.length-1){
+        if((line_context[i].split(/\/\/|#/g)[0]&&line_context[i].split(/\/\/|#/g)[0]!='')||i>=line_context.length-1){
             let space='';
             if(k<10){
                 space+=' ';
@@ -131,20 +131,22 @@ function compile(){
     let output='';
     let code=code_text.value.split('\n');
     let error=[];
+    let const_var={};
     let k=0;
     for(let i=0;i<code.length;i++){
         error.push('');
         code[i]=code[i].replace(/^\s+/g,'').split('//')[0];
         if(code[i]!=''){
-            if(i>=(2**bit)){
-                error[i]='Too many command!';
-            }else{
-                let cut=code[i].replaceAll(/\s+/g,' ').replace(' ',',').split(',');
-                if(syntax.indexOf(cut[0])>=0){
-                    if(!cut[1]){
-                        cut[1]='0';
+            if(code[i].slice(0,1)=='#'){
+                let cut=code[i].replaceAll('#','').replaceAll(/\s+/g,'').split('=');
+                if(const_var[cut[0]]==null&&cut[0]!=''){
+                    if(isNaN(Number(cut[0]))){
+                        const_var[cut[0]]=0;
+                    }else{
+                        error[i]='"'+cut_string(cut[0])+'" cannot be used as a variable name!';
                     }
-                    cut[1]=cut[1].replaceAll(' ','');
+                }
+                if(cut[1]&&cut[1]!=''){
                     let num=Number(cut[1]);
                     if(cut[1].slice(0,2)=='0b'){
                         num=parseInt(cut[1].slice(2,cut[1].length),2);
@@ -155,11 +157,40 @@ function compile(){
                     }
                     if(isNaN(num)){
                         error[i]='"'+cut[1]+'" is not a number!';
-                        num=0;
-                    }
-                    if(!(limit[syntax.indexOf(cut[0])][0]>num&&num>=limit[syntax.indexOf(cut[0])][1])){
+                    }else if(!((2**bit)>num&&num>=0)){
                         error[i]='The number '+cut_string(cut[1])+'('+cut_string(num)+') is out of range!';
-                        num=0;
+                    }else{
+                        const_var[cut[0]]=num;
+                    }
+                }
+            }else if(i>=(2**bit)){
+                error[i]='Too many command!';
+            }else{
+                let cut=code[i].replaceAll(/\s+/g,' ').replace(' ',',').split(',');
+                if(syntax.indexOf(cut[0])>=0){
+                    if(!cut[1]){
+                        cut[1]='0';
+                    }
+                    cut[1]=cut[1].replaceAll(' ','');
+                    let num=Number(cut[1]);
+                    if(const_var[cut[1]]!=null){
+                        num=const_var[cut[1]];
+                    }else{
+                        if(cut[1].slice(0,2)=='0b'){
+                            num=parseInt(cut[1].slice(2,cut[1].length),2);
+                        }else if(cut[1].slice(0,2)=='0x'){
+                            num=parseInt(cut[1].slice(2,cut[1].length),16);
+                        }else if(cut[1].slice(0,2)=='0o'){
+                            num=parseInt(cut[1].slice(2,cut[1].length),8);
+                        }
+                        if(isNaN(num)){
+                            error[i]='"'+cut[1]+'" is not a number!';
+                            num=0;
+                        }
+                        if(!(limit[syntax.indexOf(cut[0])][0]>num&&num>=limit[syntax.indexOf(cut[0])][1])){
+                            error[i]='The number '+cut_string(cut[1])+'('+cut_string(num)+') is out of range!';
+                            num=0;
+                        }
                     }
                     code[i]=syntax.indexOf(cut[0])*(2**(bit))+num;
                 }else{
