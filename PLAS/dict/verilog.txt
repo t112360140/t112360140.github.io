@@ -23,7 +23,7 @@ or
 xor
 nand
 nor
-nxor
+xnor
 not
 @
 ~
