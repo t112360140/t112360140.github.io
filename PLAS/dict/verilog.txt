@@ -21,6 +21,9 @@ while
 and
 or
 xor
+nand
+nor
+nxor
 not
 @
 ~
