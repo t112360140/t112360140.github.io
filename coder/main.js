@@ -163,6 +163,15 @@ function compile(){
                         const_var[cut[0]]=num;
                     }
                 }
+            }else if(code[i].slice(0,1)==':'){
+                let cut=code[i].replaceAll(':','').replaceAll(/\s+/g,'');
+                if(const_var[cut[0]]==null&&cut[0]!=''){
+                    if(isNaN(Number(cut[0]))){
+                        const_var[cut[0]]=i;
+                    }else{
+                        error[i]='"'+cut_string(cut[0])+'" cannot be used as a variable name!';
+                    }
+                }
             }else if(i>=(2**bit)){
                 error[i]='Too many command!';
             }else{
