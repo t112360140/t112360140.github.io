@@ -167,6 +167,8 @@ function compile(){
                     }else{
                         error[i]='"'+cut_string(cut[0])+'" cannot be used as a variable name!';
                     }
+                }else if(const_var[cut[0]]!=null){
+                        error[i]='"'+cut_string(cut[0])+'" has been defined!';
                 }
                 if(cut[1]&&cut[1]!=''){
                     let num=Number(cut[1]);
