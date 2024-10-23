@@ -134,6 +134,25 @@ function compile(){
     let const_var={};
     let k=0;
     for(let i=0;i<code.length;i++){
+        if(code[i]!=''){
+            if(/^(#|:|\/\/)/.test(code[i])){
+                if(code[i].slice(0,1)==':'){
+                    let cut=code[i].replaceAll(':','').replaceAll(/\s+/g,'');
+                    if(const_var[cut]==null&&cut!=''){
+                        if(isNaN(Number(cut))){
+                            const_var[cut]=k;
+                        }else{
+                            error[i]='"'+cut_string(cut)+'" cannot be used as a variable name!';
+                        }
+                    }
+                }
+            }else{
+                k++;
+            }
+        }
+    }
+    k=0;
+    for(let i=0;i<code.length;i++){
         error.push('');
         code[i]=code[i].replace(/^\s+/g,'').split('//')[0];
         if(code[i]!=''){
@@ -164,14 +183,7 @@ function compile(){
                     }
                 }
             }else if(code[i].slice(0,1)==':'){
-                let cut=code[i].replaceAll(':','').replaceAll(/\s+/g,'');
-                if(const_var[cut]==null&&cut!=''){
-                    if(isNaN(Number(cut))){
-                        const_var[cut]=k+1;
-                    }else{
-                        error[i]='"'+cut_string(cut)+'" cannot be used as a variable name!';
-                    }
-                }
+
             }else if(i>=(2**bit)){
                 error[i]='Too many command!';
             }else{
