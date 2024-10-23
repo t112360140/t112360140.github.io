@@ -145,6 +145,8 @@ function compile(){
                         }else{
                             error[i]='"'+cut_string(cut)+'" cannot be used as a variable name!';
                         }
+                    }else if(const_var[cut]!=null){
+                        error[i]='"'+cut_string(cut)+'" has been defined!';
                     }
                 }
             }else{
