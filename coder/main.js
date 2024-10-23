@@ -80,7 +80,7 @@ function set_number(){
     }
     let k=0;
     for(let i=0;i<line_context.length;i++){
-        if((line_context[i].split(/\/\/|#/g)[0]&&line_context[i].split(/\/\/|#|:/g)[0]!='')||i>=line_context.length-1){
+        if((line_context[i].split(/\/\/|#|:/g)[0]&&line_context[i].split(/\/\/|#|:/g)[0]!='')||i>=line_context.length-1){
             let space='';
             if(k<10){
                 space+=' ';
