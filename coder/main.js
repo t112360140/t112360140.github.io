@@ -3,6 +3,7 @@ const error_text=document.getElementById('error');
 const error_count=document.getElementById('error_count');
 const code_text=document.getElementById('code');
 const encode_text=document.getElementById('encode');
+const variable_text=document.getElementById('variable');
 
 const h_lines_text=document.getElementById('h_lines');
 const h_error_text=document.getElementById('h_error');
@@ -232,6 +233,7 @@ function compile(){
         }
     }
     encode_text.value=output;
+    variable_text.value=JSON.stringify(const_var,null,4);
     print_error(error);
 }
 
