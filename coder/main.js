@@ -165,11 +165,11 @@ function compile(){
                 }
             }else if(code[i].slice(0,1)==':'){
                 let cut=code[i].replaceAll(':','').replaceAll(/\s+/g,'');
-                if(const_var[cut[0]]==null&&cut[0]!=''){
-                    if(isNaN(Number(cut[0]))){
-                        const_var[cut[0]]=k+1;
+                if(const_var[cut]==null&&cut!=''){
+                    if(isNaN(Number(cut))){
+                        const_var[cut]=k+1;
                     }else{
-                        error[i]='"'+cut_string(cut[0])+'" cannot be used as a variable name!';
+                        error[i]='"'+cut_string(cut)+'" cannot be used as a variable name!';
                     }
                 }
             }else if(i>=(2**bit)){
