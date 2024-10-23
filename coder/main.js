@@ -233,7 +233,7 @@ function compile(){
         }
     }
     encode_text.value=output;
-    variable_text.value=JSON.stringify(const_var,null,4);
+    variable_text.value=JSON.stringify({"Variable":const_var},null,4);
     print_error(error);
 }
 
