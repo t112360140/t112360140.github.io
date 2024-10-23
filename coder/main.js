@@ -135,6 +135,7 @@ function compile(){
     let const_var={};
     let k=0;
     for(let i=0;i<code.length;i++){
+        error.push('');
         if(code[i]!=''){
             if(/^(#|:|\/\/)/.test(code[i])){
                 if(code[i].slice(0,1)==':'){
@@ -156,7 +157,6 @@ function compile(){
     }
     k=0;
     for(let i=0;i<code.length;i++){
-        error.push('');
         code[i]=code[i].replace(/^\s+/g,'').split('//')[0];
         if(code[i]!=''){
             if(code[i].slice(0,1)=='#'){
