@@ -155,3 +155,17 @@ document.getElementById('disconnectButton').addEventListener('click', disconnect
   LCD_PRINTBLOCK(0,0,[0x00 , 0xEE , 0xEE , 0xEE]);
   LCD_PRINTBLOCK(4,0,[0x00 , 0xAA , 0x44 , 0xAA]);
 ```
+
+# Other
+```
+0: "own_seed"
+1: "other_seed"
+2: "seed"
+3: "own_order"
+4: "other_hard"
+5: "game_hard"
+6: "game_turn"
+7: "wait"
+8: "game_step"
+9: "stats"
+```

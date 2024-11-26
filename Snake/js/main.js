@@ -507,7 +507,7 @@ async function main_loop(){
                 case 0:{
                     if(use_webrtc){
                         if(!temp_data['webrtc_step']){
-                            temp_data['web_close']=false;
+                            temp_data['webrtc_close']=false;
                             LCD_RESET();
                             LCD_PRINTTURESTRING(0,0,'Try to Connect');
                             document.getElementById('webrtc_offer').value='';
@@ -518,7 +518,7 @@ async function main_loop(){
                         }else if(temp_data['webrtc_step']<10){
 
                         }else if(temp_data['webrtc_step']===11){
-                            if(!temp_data['web_close']){
+                            if(!temp_data['webrtc_close']){
                                 LCD_RESET();
                                 LCD_PRINTTURESTRING(0,0,'Try to Connect');
                                 temp_data['webrtc_step']=12;
@@ -533,7 +533,7 @@ async function main_loop(){
                             clock[2]=0;
                         }else{
                             UART_port.on('close',()=>{
-                                temp_data['web_close']=true;
+                                temp_data['webrtc_close']=true;
                             });
                             UART_writer={'write':(data)=>{try{UART_port.send(data.toString())}catch(error){}}};
                             UART_port.on('data',(data)=>{RX_buffer.push(Number(data))});
