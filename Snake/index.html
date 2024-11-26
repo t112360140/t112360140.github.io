@@ -22,17 +22,21 @@
                     <tr><td><p style="height:50px;"></p></td></tr>
                     <tr>
                         <td style="white-space:nowrap;">
-                            <svg id="BT0" data-press="false" style="height:20px;width:20px;"
+                            <svg id="BT0" data-press="false" style="height:50px;width:50px;"
                                 onmousedown="this.getElementsByTagName('circle')[0].style.fill='#505050';this.dataset.press='true';"
                                 onmouseup="this.getElementsByTagName('circle')[0].style.fill='#000000';this.dataset.press='false';"
-                                onmouseout="this.getElementsByTagName('circle')[0].style.fill='#000000';this.dataset.press='false';">
-                               <circle cx="10" cy="10" r="10" fill="#000000" />
+                                onmouseout="this.getElementsByTagName('circle')[0].style.fill='#000000';this.dataset.press='false';"
+                                ontouchstart="this.getElementsByTagName('circle')[0].style.fill='#505050';this.dataset.press='true';"
+                                ontouchend="this.getElementsByTagName('circle')[0].style.fill='#000000';this.dataset.press='false';">
+                               <circle cx="25" cy="25" r="25" fill="#000000" />
                             </svg>
-                            <svg id="BT1" data-press="false" style="height:20px;width:20px;"
+                            <svg id="BT1" data-press="false" style="height:50px;width:50px;"
                                 onmousedown="this.getElementsByTagName('circle')[0].style.fill='#505050';this.dataset.press='true';"
                                 onmouseup="this.getElementsByTagName('circle')[0].style.fill='#000000';this.dataset.press='false';"
-                                onmouseout="this.getElementsByTagName('circle')[0].style.fill='#000000';this.dataset.press='false';">
-                               <circle cx="10" cy="10" r="10" fill="#000000" />
+                                onmouseout="this.getElementsByTagName('circle')[0].style.fill='#000000';this.dataset.press='false';"
+                                ontouchstart="this.getElementsByTagName('circle')[0].style.fill='#505050';this.dataset.press='true';"
+                                ontouchend="this.getElementsByTagName('circle')[0].style.fill='#000000';this.dataset.press='false';">
+                               <circle cx="25" cy="25" r="25" fill="#000000" />
                             </svg>
                         </td>
                         <td><p style="width:50px;"></p></td>
@@ -51,27 +55,31 @@
                         if(!UART_port&&this.value!=''&&temp_data['webrtc_step']==1){
                             temp_data['webrtc_step']=3;
                             UART_port=new SimplePeer();
-                            UART_port.signal(JSON.parse(this.value));
+                            UART_port.on('error',(err)=>{
+                                console.log(err);
+                            });
+                            document.getElementById('webrtc_respond').value='';
                             UART_port.on('signal',(data)=>{
-                                document.getElementById('webrtc_respond').value=JSON.stringify(data);
+                                if(document.getElementById('webrtc_respond').value==''){
+                                    document.getElementById('webrtc_respond').value=JSON.stringify(data);
+                                }
                             });
                             UART_port.on('connect',()=>{
                                 temp_data['webrtc_step']=10;
-                                console.log('hi');
                             });
+                            UART_port.signal(JSON.parse(this.value));
                         }
                     "></textarea></td>
                 </tr>
                 <tr style="height:48%;">
-                    <td>Respond:</td>
+                    <td>Answer:</td>
                     <td><textarea id="webrtc_respond" style="height:100%;width:100%" onchange="
                         if(UART_port&&this.value!=''&&temp_data['webrtc_step']==2){
                             temp_data['webrtc_step']=3;
-                            UART_port.signal(JSON.parse(this.value));
                             UART_port.on('connect',()=>{
                                 temp_data['webrtc_step']=10;
-                                console.log('hi');
                             });
+                            UART_port.signal(JSON.parse(this.value));
                         }
                     "></textarea></td>
                 </tr>
@@ -81,6 +89,9 @@
                             UART_port=new SimplePeer({
                                 initiator:true,
                                 trickle:false
+                            });
+                            UART_port.on('error',(err)=>{
+                                console.log(err);
                             });
                             UART_port.on('signal',(data)=>{
                                 document.getElementById('webrtc_offer').value=JSON.stringify(data);

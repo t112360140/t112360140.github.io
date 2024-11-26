@@ -192,8 +192,7 @@ function print_part(x=0,y=0,id=[0,0]){
 }
 
 var random=new RNG(123456);
-function reset(p=1,seed=null){
-    random=new RNG(seed||clock[2]);
+function reset(p=1){
     clear();
     switch(p){
         case 1:
@@ -517,11 +516,14 @@ async function main_loop(){
                         }else if(temp_data['webrtc_step']<10){
 
                         }else{
-                            UART_writer={'write':(data)=>{UART_port.send(data.toSrting())}};
+                            temp_data['webrtc_step']=0;
+                            UART_writer={'write':(data)=>{UART_port.send(data.toString())}};
                             UART_port.on('data',(data)=>{RX_buffer.push(Number(data))});
                             document.getElementById('webrtc_set').style.display='none';
                             step=1;
                             RX_buffer=[];
+                            clock[0]=0;
+                            clock[2]=0;
                         }
                     }else{
                         LCD_RESET();
@@ -585,6 +587,7 @@ async function main_loop(){
                             step=2;
                         }else{
                             temp_data['seed']=(temp_data['own_seed']+temp_data['other_seed'])%256;
+                            random=new RNG(temp_data['seed']);
                             temp_data['own_order']=(temp_data['own_seed']>temp_data['other_seed'])?1:2;
                             LCD_PRINTTURESTRING(0,1,"Exchange Diff!");
                             UART_writer.write(100);
@@ -692,7 +695,7 @@ async function main_loop(){
                     break;
                 }
                 case 12:{
-                    reset(2,temp_data['seed']);
+                    reset(2);
                     print_map();
                     clock[0]=0;
                     step++;
@@ -780,7 +783,8 @@ async function main_loop(){
                             break;
                         }else{
                             if(temp_data['wait']==1&&RX_buffer.length>0){
-                                if(temp_data['game_step']!==RX_buffer.shift()){
+                                const a=RX_buffer.shift();
+                                if(temp_data['game_step']===a){
                                     temp_data['wait']++;
                                 }else{
                                     step=80;
@@ -815,9 +819,9 @@ async function main_loop(){
                     if(RX_buffer.length>0){
                         if(temp_data['stats']===RX_buffer.shift()){
                             if(temp_data['stats']==1){
-                                step=20;
-                            }else if(temp_data['stats']==2){
                                 step=21;
+                            }else if(temp_data['stats']==2){
+                                step=20;
                             }else{
                                 step=22;
                             }
@@ -907,7 +911,7 @@ async function main_loop(){
                 case 90:{
                     if(use_webrtc){
                         UART_port.on('close',()=>{});
-                        step++;
+                        step=99;
                     }else{
                         try {
                             await port.close();
