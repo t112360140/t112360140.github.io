@@ -1,0 +1,81 @@
+<html>
+    <head>
+
+    </head>
+    <body style="user-select: none;">
+        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);">
+            <canvas height="640" width="320" id="canvas1"></canvas>
+            <canvas height="640" width="320" id="canvas2"></canvas><br><br>
+            <textarea rows="5" cols="40" id="output_text1" style="resize:none;"></textarea>
+            <textarea rows="5" cols="40" id="output_text2" style="resize:none;"></textarea><br><br>
+            <button style="height:25px;width:100%;" onclick="reset();">RESET</button>
+        </div>
+
+        <script>
+            const num=2;
+            const ctx=[];
+            for(let i=0;i<num;i++){
+                ctx.push(document.getElementById('canvas'+(i+1)).getContext("2d"));
+            }
+
+            var map;
+            reset();
+
+            for(let i=0;i<num;i++){
+                document.getElementById('canvas'+(i+1)).addEventListener('click',(e)=>{
+                    const pos=[Math.floor(e.offsetX/40),Math.floor(e.offsetY/40)]
+                    map[pos[0]+i*8][pos[1]]=(map[pos[0]+i*8][pos[1]]+1)%2;
+                    if(map[pos[0]+i*8][pos[1]]===1){
+                        ctx[i].fillStyle="#ff0000";
+                    }else{
+                        ctx[i].fillStyle="#909090";
+                    }
+                    ctx[i].fillRect(pos[0]*40+2,pos[1]*40+2,35,35);
+                    document.getElementById('output_text'+(i+1)).innerHTML=count(16,i).toString()+',';
+                });
+            }
+
+            function reset(){
+                map=[];
+                for(let i=0;i<8*num;i++){
+                    let temp=[];
+                    for(let j=0;j<16;j++){
+                        temp.push(0);
+                    }
+                    map.push(temp);
+                }
+
+                for(let i=0;i<ctx.length;i++){
+                    ctx[i].fillStyle="#909090";
+                    ctx[i].fillRect(0,0,320,640);
+                    ctx[i].fillStyle="#000000";
+                    for(let j=1;j<8;j++){
+                        ctx[i].moveTo(j*40,0);
+                        ctx[i].lineTo(j*40,640);
+                    }
+                    for(let j=1;j<16;j++){
+                        ctx[i].moveTo(0,j*40);
+                        ctx[i].lineTo(320,j*40);
+                    }
+                    ctx[i].stroke();
+                    document.getElementById('output_text'+(i+1)).innerHTML=count(16,i).toString()+',';
+                }
+
+            }
+
+            function count(type=10,chunk=0){
+                let output=[];
+                for(let i=0;i<16;i++){
+                    let char=0;
+                    for(let j=7;j>=0;j--){
+                        char+=map[i%8+chunk*8][(Math.floor(i/8))*8+j];
+                        char*=2;
+                    }
+                    char=char>>1;
+                    output.push((type===16?('0x'+((char<16)?'0':'')):'')+char.toString(type).toUpperCase());
+                }
+                return output;
+            }
+        </script>
+    </body>
+</html>

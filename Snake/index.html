@@ -1,0 +1,96 @@
+<html>
+    <head>
+        <script src="js/lib.js"></script>
+        <script src="js/simplepeer.min.js"></script>
+    </head>
+    <body style="user-select: none;">
+        <span style="white-space:nowarp;">Use WebRTC as UART:<input type="checkbox" onchange="use_webrtc=this.checked;"></span>
+        <div style="height:100%;width:100%;position:relative;">
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);">
+                <canvas id="canvas" style="height:512px;width:1024px;margin:auto;" height="512" width="1024"></canvas>
+                <table style="width:min-content;margin: 20px auto 0 auto;">
+                    <tr>
+                        <td colspan="3" style="white-space:nowrap;">
+                            <div style="margin:auto;width:min-content;">
+                                <div id="LED3" style="background:#0000ff;height:20px;width:20px;display:inline-block;opacity:0;"></div>
+                                <div id="LED2" style="background:#ff0000;height:20px;width:20px;display:inline-block;opacity:0;"></div>
+                                <div id="LED1" style="background:#ffa000;height:20px;width:20px;display:inline-block;opacity:0;"></div>
+                                <div id="LED0" style="background:#00ff00;height:20px;width:20px;display:inline-block;opacity:0;"></div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr><td><p style="height:50px;"></p></td></tr>
+                    <tr>
+                        <td style="white-space:nowrap;">
+                            <svg id="BT0" data-press="false" style="height:20px;width:20px;"
+                                onmousedown="this.getElementsByTagName('circle')[0].style.fill='#505050';this.dataset.press='true';"
+                                onmouseup="this.getElementsByTagName('circle')[0].style.fill='#000000';this.dataset.press='false';"
+                                onmouseout="this.getElementsByTagName('circle')[0].style.fill='#000000';this.dataset.press='false';">
+                               <circle cx="10" cy="10" r="10" fill="#000000" />
+                            </svg>
+                            <svg id="BT1" data-press="false" style="height:20px;width:20px;"
+                                onmousedown="this.getElementsByTagName('circle')[0].style.fill='#505050';this.dataset.press='true';"
+                                onmouseup="this.getElementsByTagName('circle')[0].style.fill='#000000';this.dataset.press='false';"
+                                onmouseout="this.getElementsByTagName('circle')[0].style.fill='#000000';this.dataset.press='false';">
+                               <circle cx="10" cy="10" r="10" fill="#000000" />
+                            </svg>
+                        </td>
+                        <td><p style="width:50px;"></p></td>
+                        <td>
+                            <input id="ADC" type="range" min="0" max="4095" value="0">
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div id="webrtc_set" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#a0a0a0;height:50%;width:50%;border:solid;display:none;">
+            <table style="margin:4%;height:92%;width:92%;" border="1">
+                <tr style="height:48%;">
+                    <td style="width:80px;">Offer:</td>
+                    <td><textarea id="webrtc_offer" style="height:100%;width:100%" onchange="
+                        if(!UART_port&&this.value!=''&&temp_data['webrtc_step']==1){
+                            temp_data['webrtc_step']=3;
+                            UART_port=new SimplePeer();
+                            UART_port.signal(JSON.parse(this.value));
+                            UART_port.on('signal',(data)=>{
+                                document.getElementById('webrtc_respond').value=JSON.stringify(data);
+                            });
+                            UART_port.on('connect',()=>{
+                                temp_data['webrtc_step']=10;
+                                console.log('hi');
+                            });
+                        }
+                    "></textarea></td>
+                </tr>
+                <tr style="height:48%;">
+                    <td>Respond:</td>
+                    <td><textarea id="webrtc_respond" style="height:100%;width:100%" onchange="
+                        if(UART_port&&this.value!=''&&temp_data['webrtc_step']==2){
+                            temp_data['webrtc_step']=3;
+                            UART_port.signal(JSON.parse(this.value));
+                            UART_port.on('connect',()=>{
+                                temp_data['webrtc_step']=10;
+                                console.log('hi');
+                            });
+                        }
+                    "></textarea></td>
+                </tr>
+                <tr style="height:4%;">
+                    <td style="white-space:nowarp;" colspan="2">
+                        <button style="width:100%;" onclick="
+                            UART_port=new SimplePeer({
+                                initiator:true,
+                                trickle:false
+                            });
+                            UART_port.on('signal',(data)=>{
+                                document.getElementById('webrtc_offer').value=JSON.stringify(data);
+                                temp_data['webrtc_step']=2;
+                            });
+                        ">Create Offer</button>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <script src="js/main.js"></script>
+    </body>
+</html>
