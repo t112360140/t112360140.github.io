@@ -111,14 +111,6 @@ function next_map(num=1){   //return 1: player1 lost, 2: player2 lost, 3: 2 play
         if(pos[0][0]==pos[1][0]&&pos[0][1]==pos[1][1]&&num>=2){
             return 3;
         }
-        for(let i=0;i<num;i++){
-            if(map[pos[i][0]][pos[i][1]]>0){
-                lost+=i+1;
-            }
-        }
-        if(lost>0){
-            return lost;
-        }
         for(let i=0;i<16;i++){
             for(let j=0;j<32;j++){
                 if(map[i][j]>0){
@@ -128,6 +120,14 @@ function next_map(num=1){   //return 1: player1 lost, 2: player2 lost, 3: 2 play
                     map[i][j]=0;
                 }
             }
+        }
+        for(let i=0;i<num;i++){
+            if(map[pos[i][0]][pos[i][1]]>0){
+                lost+=i+1;
+            }
+        }
+        if(lost>0){
+            return lost;
         }
         for(let i=0;i<num;i++){
             if(map[pos[i][0]][pos[i][1]]<0){
