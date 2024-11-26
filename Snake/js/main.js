@@ -41,6 +41,10 @@ window.addEventListener('keyup',(e)=>{
     }
 });
 
+window.addEventListener('dbclick',(e)=>{
+    e.preventDefault();
+});
+
 function clear(h=16,w=32){
     score=[0,0];
     map=[];
