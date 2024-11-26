@@ -41,10 +41,6 @@ window.addEventListener('keyup',(e)=>{
     }
 });
 
-window.addEventListener('dbclick',(e)=>{
-    e.preventDefault();
-});
-
 function clear(h=16,w=32){
     score=[0,0];
     map=[];
@@ -242,16 +238,16 @@ async function main_loop(){
             }
             case 0:{
                 if(clock[0]>=500){
-                    LCD_PRINTTURESTRING(0,0,'                ');
-                    LCD_PRINTTURESTRING(0,1,'                ');
-                    LCD_PRINTTURESTRING(0,2,'                ');
-                    LCD_PRINTTURESTRING(0,3,'                ');
-                    point2=-1;
-                    step++;
+                    LED_PWM(3,0);
+                    LED_PWM(2,0);
+                    LED_PWM(0,0);
+                    LED_PWM(1,0);
                     LCD_PRINTTURESTRING(0,0,"     SNAKE!     ");
                     LCD_PRINTTURESTRING(0,1," 1. 1 PLAYER    ");
                     LCD_PRINTTURESTRING(0,2," 2. 2 PLAYER    ");
                     LCD_PRINTTURESTRING(0,3," 3. DIFFICULTY  ");
+                    point2=-1;
+                    step++;
                     clock[0]=0;
                 }
                 break;
@@ -425,7 +421,7 @@ async function main_loop(){
                             temp_face=0;
                         }
                     }
-                    if(clock[0]%50==0){
+                    if(clock[3]>=50){
                         if(temp_data['eat_new_apple1']>=0){
                             if(temp_data['eat_new_apple1']%2==0){
                                 for(let i=0;i<4;i++){
@@ -440,6 +436,7 @@ async function main_loop(){
                                 temp_data['eat_new_apple1']--;
                             }
                         }
+                        clock[3]=0;
                     }
                     if(clock[1]>=500){
                         for(let i=0;i<16;i++){
@@ -473,22 +470,22 @@ async function main_loop(){
                     break;
                 }
                 case 4:{
-                    LCD_PRINTTURESTRING(4,0,"YOU LOST");
-                    LCD_PRINTTURESTRING(3,1,`SCORE:${score[0].toString().padStart(4,' ')}`);
+                    LCD_PRINTTURESTRING(3,0," YOU LOST ");
+                    LCD_PRINTTURESTRING(2,1,` SCORE:${score[0].toString().padStart(4,' ')} `);
                     clock[0]=0;
                     step=6;
                     break;
                 }
                 case 5:{
-                    LCD_PRINTTURESTRING(4,0,"YOU WIN!");
-                    LCD_PRINTTURESTRING(3,1,`SCORE:${score[0].toString().padStart(4,' ')}`);
+                    LCD_PRINTTURESTRING(3,0," YOU WIN! ");
+                    LCD_PRINTTURESTRING(2,1,` SCORE:${score[0].toString().padStart(4,' ')} `);
                     clock[0]=0;
                     step=6;
                     break;
                 }
                 case 6:{
                     if(clock[0]>1000){
-                        LCD_PRINTTURESTRING(2,3,"PRESS BUTTON");
+                        LCD_PRINTTURESTRING(1,3," PRESS BUTTON ");
                         if(BUTTON_STATUS(0)||BUTTON_STATUS(1)){
                             player_mode=0;
                             step=0;
@@ -513,6 +510,8 @@ async function main_loop(){
                             temp_data['web_close']=false;
                             LCD_RESET();
                             LCD_PRINTTURESTRING(0,0,'Try to Connect');
+                            document.getElementById('webrtc_offer').value='';
+                            document.getElementById('webrtc_answer').value='';
                             document.getElementById('webrtc_set').style.display='';
                             temp_data['webrtc_step']=1;
                             UART_port=null;
@@ -536,7 +535,7 @@ async function main_loop(){
                             UART_port.on('close',()=>{
                                 temp_data['web_close']=true;
                             });
-                            UART_writer={'write':(data)=>{UART_port.send(data.toString())}};
+                            UART_writer={'write':(data)=>{try{UART_port.send(data.toString())}catch(error){}}};
                             UART_port.on('data',(data)=>{RX_buffer.push(Number(data))});
                             document.getElementById('webrtc_set').style.display='none';
                             temp_data['webrtc_step']=12;
@@ -561,7 +560,6 @@ async function main_loop(){
                 }
                 case 1:{
                     if(RX_buffer.length>0&&RX_buffer.shift()===112){
-                        while(RX_buffer[0]===112)RX_buffer.shift();
                         UART_writer.write(112);
                         LCD_PRINTTURESTRING(0,1,"Exchange Seed!");
                         UART_writer.write(115);
@@ -631,7 +629,7 @@ async function main_loop(){
                 case 5:{
                     if(RX_buffer.length>0){
                         temp_data['other_hard']=RX_buffer.shift();
-                        temp_data['game_hard']=(Math.floor(hard+temp_data['other_hard'])/2)%5+1;
+                        temp_data['game_hard']=(Math.floor(hard+temp_data['other_hard'])/2)%6;
                         UART_writer.write(83);
                         clock[1]=0;
                         step++;
@@ -713,6 +711,7 @@ async function main_loop(){
                     reset(2);
                     print_map();
                     clock[0]=0;
+                    clock[3]=0;
                     step++;
                     break;
                 }
@@ -731,7 +730,7 @@ async function main_loop(){
                             temp_face=0;
                         }
                     }
-                    if(clock[0]%50==0){
+                    if(clock[3]>=50){
                         if(temp_data['eat_new_apple1']>=0){
                             if(temp_data['eat_new_apple1']%2==0){
                                 for(let i=0;i<2;i++){
@@ -766,6 +765,7 @@ async function main_loop(){
                                 LED_PWM(1,temp_data['win_count'][1]>=2?255:0);
                             }
                         }
+                        clock[3]=0;
                     }
                     if(clock[1]>=500){
                         for(let i=0;i<16;i++){
@@ -793,7 +793,7 @@ async function main_loop(){
                         clock[0]=0;
                     }
                     if(temp_data['wait']){
-                        if(clock[2]>=2000){
+                        if(clock[2]>=1000){
                             step=80;
                             break;
                         }else{
@@ -847,6 +847,7 @@ async function main_loop(){
                 }
                 case 20:{
                     LCD_PRINTTURESTRING(0,1,"  Player1 Win!  ");
+                    LCD_PRINTTURESTRING(0,3,"                ");
                     for(let i=0;i<12;i++){
                         LCD_PRINTBLOCK((i+10)*4,6,[0x00,0xE0,0xE0,0xE0]);
                     }
@@ -856,6 +857,7 @@ async function main_loop(){
                 }
                 case 21:{
                     LCD_PRINTTURESTRING(0,1,"  Player2 Win!  ");
+                    LCD_PRINTTURESTRING(0,3,"                ");
                     for(let i=0;i<12;i++){
                         LCD_PRINTBLOCK((i+10)*4,6,[0x00,0xA0,0x40,0xA0]);
                     }
@@ -864,7 +866,7 @@ async function main_loop(){
                     break;
                 }
                 case 22:{
-                    LCD_PRINTTURESTRING(6,1,"TIE!");
+                    LCD_PRINTTURESTRING(0,1,"      TIE!      ");
                     for(let i=0;i<12;i++){
                         LCD_PRINTBLOCK((i+10)*4,6,[[0x00,0xE0,0xE0,0xE0],[0x00,0xA0,0x40,0xA0]][Math.floor(i/6)]);
                     }
@@ -894,6 +896,8 @@ async function main_loop(){
                             LCD_PRINTBLOCK((i+10)*4,6,body[(temp_data['win_count'][0]>=2?0:1)]);
                         }
                         clock[2]=0;
+                        clock[3]=0;
+                        clock[4]=0;
                         step=26;
                     }else{
                         step++;
@@ -906,22 +910,23 @@ async function main_loop(){
                     break;
                 }
                 case 26:{
-                    if(clock[2]%50==0){
-                        if(temp_data['win_count'][0]>=2){
-                            LED_PWM(3,(temp_data['win_count'][0]>=1&&clock[2]%100!=0)?255:0);
-                            LED_PWM(2,(temp_data['win_count'][0]>=2&&clock[2]%100!=0)?255:0);
-                        }else if(temp_data['win_count'][1]>=2){
-                            LED_PWM(0,(temp_data['win_count'][1]>=1&&clock[2]%100!=0)?255:0);
-                            LED_PWM(1,(temp_data['win_count'][1]>=2&&clock[2]%100!=0)?255:0);
+                    if(clock[3]>=50){
+                        LED_PWM(3,temp_data['win_count'][0]>=2&&(clock[4]>clock[3])?255:0);
+                        LED_PWM(2,temp_data['win_count'][0]>=2&&(clock[4]>clock[3])?255:0);
+                        LED_PWM(0,temp_data['win_count'][1]>=2&&(clock[4]>clock[3])?255:0);
+                        LED_PWM(1,temp_data['win_count'][1]>=2&&(clock[4]>clock[3])?255:0);
+                        clock[3]=0;
+                        if(clock[4]>=100){
+                            clock[4]=0;
                         }
-                        if(clock[2]>=3000){
-                            LED_PWM(3,temp_data['win_count'][0]>=1?255:0);
-                            LED_PWM(2,temp_data['win_count'][0]>=2?255:0);
-                            LED_PWM(0,temp_data['win_count'][1]>=1?255:0);
-                            LED_PWM(1,temp_data['win_count'][1]>=2?255:0);
-                            LCD_PRINTTURESTRING(2,3,"PRESS BUTTON");
-                            step=90;
-                        }
+                    }
+                    if(clock[2]>=2000){
+                        LED_PWM(3,temp_data['win_count'][0]>=2?255:0);
+                        LED_PWM(2,temp_data['win_count'][0]>=2?255:0);
+                        LED_PWM(0,temp_data['win_count'][1]>=2?255:0);
+                        LED_PWM(1,temp_data['win_count'][1]>=2?255:0);
+                        LCD_PRINTTURESTRING(2,3,"PRESS BUTTON");
+                        step=90;
                     }
                     break;
                 }

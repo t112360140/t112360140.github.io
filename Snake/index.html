@@ -5,7 +5,7 @@
     </head>
     <body style="user-select: none;">
         <span style="white-space:nowarp;">Use WebRTC as UART:<input type="checkbox" onchange="use_webrtc=this.checked;"></span>
-        <div style="height:100%;width:100%;position:relative;">
+        <div style="height:95%;width:100%;position:relative;">
             <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);">
                 <canvas id="canvas" style="height:512px;width:1024px;margin:auto;" height="512" width="1024"></canvas>
                 <table style="width:min-content;margin: 20px auto 0 auto;">
@@ -58,10 +58,10 @@
                             UART_port.on('error',(err)=>{
                                 console.log(err);
                             });
-                            document.getElementById('webrtc_respond').value='';
+                            document.getElementById('webrtc_answer').value='';
                             UART_port.on('signal',(data)=>{
-                                if(document.getElementById('webrtc_respond').value==''){
-                                    document.getElementById('webrtc_respond').value=JSON.stringify(data);
+                                if(document.getElementById('webrtc_answer').value==''){
+                                    document.getElementById('webrtc_answer').value=JSON.stringify(data);
                                 }
                             });
                             UART_port.on('connect',()=>{
@@ -73,7 +73,7 @@
                 </tr>
                 <tr style="height:48%;">
                     <td>Answer:</td>
-                    <td><textarea id="webrtc_respond" style="height:100%;width:100%" onchange="
+                    <td><textarea id="webrtc_answer" style="height:100%;width:100%" onchange="
                         if(UART_port&&this.value!=''&&temp_data['webrtc_step']==2){
                             temp_data['webrtc_step']=3;
                             UART_port.on('connect',()=>{
