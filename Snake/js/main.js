@@ -510,24 +510,36 @@ async function main_loop(){
                 case 0:{
                     if(use_webrtc){
                         if(!temp_data['webrtc_step']){
+                            temp_data['web_close']=false;
                             LCD_RESET();
-                            clock[0]=0;
-                            clock[2]=0;
                             LCD_PRINTTURESTRING(0,0,'Try to Connect');
                             document.getElementById('webrtc_set').style.display='';
                             temp_data['webrtc_step']=1;
                             UART_port=null;
                         }else if(temp_data['webrtc_step']<10){
 
-                        }else{
-                            temp_data['webrtc_step']=0;
-                            UART_writer={'write':(data)=>{UART_port.send(data.toString())}};
-                            UART_port.on('data',(data)=>{RX_buffer.push(Number(data))});
-                            document.getElementById('webrtc_set').style.display='none';
+                        }else if(temp_data['webrtc_step']===11){
+                            if(!temp_data['web_close']){
+                                LCD_RESET();
+                                LCD_PRINTTURESTRING(0,0,'Try to Connect');
+                                temp_data['webrtc_step']=12;
+                            }else{
+                                temp_data['webrtc_step']=0;
+                            }
+                        }else if(temp_data['webrtc_step']===12){
+                            temp_data['webrtc_step']=11;
                             step=1;
                             RX_buffer=[];
                             clock[0]=0;
                             clock[2]=0;
+                        }else{
+                            UART_port.on('close',()=>{
+                                temp_data['web_close']=true;
+                            });
+                            UART_writer={'write':(data)=>{UART_port.send(data.toString())}};
+                            UART_port.on('data',(data)=>{RX_buffer.push(Number(data))});
+                            document.getElementById('webrtc_set').style.display='none';
+                            temp_data['webrtc_step']=12;
                         }
                     }else{
                         LCD_RESET();
@@ -549,14 +561,13 @@ async function main_loop(){
                 }
                 case 1:{
                     if(RX_buffer.length>0&&RX_buffer.shift()===112){
+                        while(RX_buffer[0]===112)RX_buffer.shift();
                         UART_writer.write(112);
                         LCD_PRINTTURESTRING(0,1,"Exchange Seed!");
                         UART_writer.write(115);
                         clock[1]=0;
                         step++;
-                        break;
-                    }
-                    if(clock[0]>=1000){
+                    }else if(clock[0]>=1000){
                         UART_writer.write(112);
                         clock[0]=0;
                     }
@@ -620,7 +631,7 @@ async function main_loop(){
                 case 5:{
                     if(RX_buffer.length>0){
                         temp_data['other_hard']=RX_buffer.shift();
-                        temp_data['game_hard']=((hard+temp_data['other_hard'])/2)%5+1;
+                        temp_data['game_hard']=(Math.floor(hard+temp_data['other_hard'])/2)%5+1;
                         UART_writer.write(83);
                         clock[1]=0;
                         step++;
@@ -787,8 +798,7 @@ async function main_loop(){
                             break;
                         }else{
                             if(temp_data['wait']==1&&RX_buffer.length>0){
-                                const a=RX_buffer.shift();
-                                if(temp_data['game_step']===a){
+                                if(temp_data['game_step']===RX_buffer.shift()){
                                     temp_data['wait']++;
                                 }else{
                                     step=80;
@@ -874,6 +884,11 @@ async function main_loop(){
                     if(temp_data['win_count'][0]>=2||temp_data['win_count'][1]>=2){
                         LCD_PRINTTURESTRING(0,0,"                ");
                         LCD_PRINTTURESTRING(0,3,"                ");
+                        if(temp_data['win_count'][temp_data['own_order']-1]>=2){
+                            LCD_PRINTTURESTRING(0,1,"    You Win!    ");
+                        }else{
+                            LCD_PRINTTURESTRING(0,1,"    You Lost!   ");
+                        }
                         const body=[[0x00,0xE0,0xE0,0xE0],[0x00,0xA0,0x40,0xA0]];
                         for(let i=0;i<12;i++){
                             LCD_PRINTBLOCK((i+10)*4,6,body[(temp_data['win_count'][0]>=2?0:1)]);
@@ -900,6 +915,10 @@ async function main_loop(){
                             LED_PWM(1,(temp_data['win_count'][1]>=2&&clock[2]%100!=0)?255:0);
                         }
                         if(clock[2]>=3000){
+                            LED_PWM(3,temp_data['win_count'][0]>=1?255:0);
+                            LED_PWM(2,temp_data['win_count'][0]>=2?255:0);
+                            LED_PWM(0,temp_data['win_count'][1]>=1?255:0);
+                            LED_PWM(1,temp_data['win_count'][1]>=2?255:0);
                             LCD_PRINTTURESTRING(2,3,"PRESS BUTTON");
                             step=90;
                         }
@@ -914,7 +933,7 @@ async function main_loop(){
                 }
                 case 90:{
                     if(use_webrtc){
-                        UART_port.on('close',()=>{});
+                        //UART_port.on('close',()=>{});
                         step=99;
                     }else{
                         try {
