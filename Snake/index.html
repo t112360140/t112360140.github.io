@@ -102,7 +102,9 @@
                                 console.log(err);
                             });
                             UART_port.on('signal',(data)=>{
-                                document.getElementById('webrtc_offer').value=JSON.stringify(data);
+                                if(document.getElementById('webrtc_offer').value==''){
+                                    document.getElementById('webrtc_offer').value=JSON.stringify(data);
+                                }
                                 temp_data['webrtc_step']=2;
                             });
                         ">Create Offer</button>
