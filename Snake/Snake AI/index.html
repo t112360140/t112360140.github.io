@@ -1,0 +1,141 @@
+<html>
+    <head>
+        <script src="js/lib.js"></script>
+        <script src="js/simplepeer.min.js"></script>
+        
+        <script src="js/tf.min.js"></script>
+        <script src="js/AI.js"></script>
+    </head>
+    <body style="user-select: none;">
+        <span style="white-space:nowarp;">Use WebRTC as UART:<input type="checkbox" onchange="use_webrtc=this.checked;"></span><br>
+        <span style="white-space:nowarp;">AI Model:<input type="file" onchange="
+            let model=this.files;
+            let JSON;
+            let Weights;
+            for(let i=0;i<model.length;i++){
+                if(model[i].name.includes('json')){
+                    JSON=model[i];
+                }else if(model[i].name.includes('bin')){
+                    Weights=model[i];
+                }
+            }
+            if((JSON!=null)&&(Weights!=null)){
+                AI_Aagent.loadModel(JSON,Weights);
+            }else{
+                alert('Not model can load!');
+            }
+        "></span><br>
+        <span style="white-space:nowarp;">AI Model URL:<input type="url" onchange="
+            const url=this.value;
+            if((url!='')&&(url.includes('.json')))AI_Aagent.loadModelUrl(this.value);
+        "></span>
+        <div style="height:95%;width:100%;position:relative;">
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);">
+                <canvas id="canvas" style="height:512px;width:1024px;margin:auto;" height="512" width="1024"></canvas>
+                <table style="width:min-content;margin: 20px auto 0 auto;">
+                    <tr>
+                        <td colspan="3" style="white-space:nowrap;">
+                            <div style="margin:auto;width:min-content;">
+                                <div style="background:#a0a0a0;margin:1px;display:inline-block;">
+                                    <div id="LED3" style="background:#0000ff;margin:2px;height:20px;width:20px;opacity:0;"></div>
+                                </div>
+                                <div style="background:#a0a0a0;margin:1px;display:inline-block;">
+                                    <div id="LED2" style="background:#ff0000;margin:2px;height:20px;width:20px;opacity:0;"></div>
+                                </div>
+                                    <div style="background:#a0a0a0;margin:1px;display:inline-block;">
+                                    <div id="LED1" style="background:#ffa000;margin:2px;height:20px;width:20px;opacity:0;"></div>
+                                </div>
+                                    <div style="background:#a0a0a0;margin:1px;display:inline-block;">
+                                    <div id="LED0" style="background:#00ff00;margin:2px;height:20px;width:20px;opacity:0;"></div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr><td><p style="height:50px;"></p></td></tr>
+                    <tr>
+                        <td style="white-space:nowrap;">
+                            <svg id="BT0" data-press="false" style="height:50px;width:50px;"
+                                onmousedown="this.getElementsByTagName('circle')[0].style.fill='#505050';this.dataset.press='true';"
+                                onmouseup="this.getElementsByTagName('circle')[0].style.fill='#000000';this.dataset.press='false';"
+                                onmouseout="this.getElementsByTagName('circle')[0].style.fill='#000000';this.dataset.press='false';"
+                                ontouchstart="this.getElementsByTagName('circle')[0].style.fill='#505050';this.dataset.press='true';"
+                                ontouchend="this.getElementsByTagName('circle')[0].style.fill='#000000';this.dataset.press='false';">
+                               <circle cx="25" cy="25" r="25" fill="#000000" />
+                            </svg>
+                            <svg id="BT1" data-press="false" style="height:50px;width:50px;"
+                                onmousedown="this.getElementsByTagName('circle')[0].style.fill='#505050';this.dataset.press='true';"
+                                onmouseup="this.getElementsByTagName('circle')[0].style.fill='#000000';this.dataset.press='false';"
+                                onmouseout="this.getElementsByTagName('circle')[0].style.fill='#000000';this.dataset.press='false';"
+                                ontouchstart="this.getElementsByTagName('circle')[0].style.fill='#505050';this.dataset.press='true';"
+                                ontouchend="this.getElementsByTagName('circle')[0].style.fill='#000000';this.dataset.press='false';">
+                               <circle cx="25" cy="25" r="25" fill="#000000" />
+                            </svg>
+                        </td>
+                        <td><p style="width:50px;"></p></td>
+                        <td>
+                            <input id="ADC" type="range" min="0" max="4095" value="0">
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div id="webrtc_set" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#a0a0a0;height:50%;width:50%;border:solid;display:none;">
+            <table style="margin:4%;height:92%;width:92%;" border="1">
+                <tr style="height:48%;">
+                    <td style="width:80px;">Offer:</td>
+                    <td><textarea id="webrtc_offer" style="height:100%;width:100%" onchange="
+                        if(!UART_port&&this.value!=''&&temp_data['webrtc_step']==1){
+                            temp_data['webrtc_step']=3;
+                            UART_port=new SimplePeer();
+                            UART_port.on('error',(err)=>{
+                                console.log(err);
+                            });
+                            document.getElementById('webrtc_answer').value='';
+                            UART_port.on('signal',(data)=>{
+                                if(document.getElementById('webrtc_answer').value==''){
+                                    document.getElementById('webrtc_answer').value=JSON.stringify(data);
+                                }
+                            });
+                            UART_port.on('connect',()=>{
+                                temp_data['webrtc_step']=10;
+                            });
+                            UART_port.signal(JSON.parse(this.value));
+                        }
+                    "></textarea></td>
+                </tr>
+                <tr style="height:48%;">
+                    <td>Answer:</td>
+                    <td><textarea id="webrtc_answer" style="height:100%;width:100%" onchange="
+                        if(UART_port&&this.value!=''&&temp_data['webrtc_step']==2){
+                            temp_data['webrtc_step']=3;
+                            UART_port.on('connect',()=>{
+                                temp_data['webrtc_step']=10;
+                            });
+                            UART_port.signal(JSON.parse(this.value));
+                        }
+                    "></textarea></td>
+                </tr>
+                <tr style="height:4%;">
+                    <td style="white-space:nowarp;" colspan="2">
+                        <button style="width:100%;" onclick="
+                            UART_port=new SimplePeer({
+                                initiator:true,
+                                trickle:false
+                            });
+                            UART_port.on('error',(err)=>{
+                                console.log(err);
+                            });
+                            UART_port.on('signal',(data)=>{
+                                if(document.getElementById('webrtc_offer').value==''){
+                                    document.getElementById('webrtc_offer').value=JSON.stringify(data);
+                                }
+                                temp_data['webrtc_step']=2;
+                            });
+                        ">Create Offer</button>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <script src="js/main.js"></script>
+    </body>
+</html>
