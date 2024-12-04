@@ -1,6 +1,9 @@
 /* global Test */
 /// <reference path="lib.js" />
 /// <reference path="simplepeer.min.js" />
+/// <reference path="auto_play.js" />
+
+var pause=false;
 
 var map=[];
 var last_map=[];
@@ -10,6 +13,8 @@ var temp_face=0;
 var score=[0,0];
 var base_len=5;
 var clock=[0,0,0,0,0];
+
+var game_base_delay=150;
 
 var use_webrtc=false;
 
@@ -105,6 +110,7 @@ function next_map(num=1){   //return 1: player1 lost, 2: player2 lost, 3: 2 play
     }
     if(lost<=0){
         if(pos[0][0]==pos[1][0]&&pos[0][1]==pos[1][1]&&num>=2){
+            map[pos[0][0]][pos[1][0]]=-3;
             return 3;
         }
         for(let i=0;i<16;i++){
@@ -169,16 +175,18 @@ function get_pos_stats(x,y){
         return 2;
     }else if(map[y][x]>=1){
         return 1;
-    }else if(map[y][x]==-1){
+    }else if(map[y][x]==-4){
         return 3;
-    }else if(map[y][x]==-2){
+    }else if(map[y][x]==-1){
         return 4;
+    }else if(map[y][x]==-2){
+        return 5;
     }
     return 0;
 }
 
 function print_part(x=0,y=0,id=[0,0]){
-    const icon=[[0x00,0x00,0x00,0x00],[0x00,0x0E,0x0E,0x0E],[0x00,0x0A,0x04,0x0A],[0x01,0x0E,0x0A,0x0E],[0x02,0x0E,0x0A,0x0E]];
+    const icon=[[0x00,0x00,0x00,0x00],[0x00,0x0E,0x0E,0x0E],[0x00,0x0A,0x04,0x0A],[0x00,0x0E,0x06,0x0A],[0x01,0x0E,0x0A,0x0E],[0x02,0x0E,0x0A,0x0E]];
     let print_char=[];
     for(let i=0;i<4;i++){
         let temp=0;
@@ -222,8 +230,7 @@ var player_mode=0;
 let point=0,point2=-1;
 let temp_data={};
 
-let UART_port;
-let UART_writer={'write':(data)=>{console.log(data);}};
+let UART_port={'port':null,'write':(data)=>{console.log(data);},'writer':null,'reader':null};
 
 async function main_loop(){
     if(player_mode<=0){
@@ -237,7 +244,7 @@ async function main_loop(){
                 break;
             }
             case 0:{
-                if(clock[0]>=500){
+                if(clock[0]>=1000){
                     LED_PWM(3,0);
                     LED_PWM(2,0);
                     LED_PWM(0,0);
@@ -401,6 +408,8 @@ async function main_loop(){
                     break;
                 }
                 case 2:{
+                    random=new RNG((clock[3]+GET_ADC_VALUE())%256);
+                    // random=new RNG(99);
                     reset(1);
                     print_map();
                     step++;
@@ -421,7 +430,7 @@ async function main_loop(){
                             temp_face=0;
                         }
                     }
-                    if(clock[3]>=50){
+                    if(clock[3]>=100){
                         if(temp_data['eat_new_apple1']>=0){
                             if(temp_data['eat_new_apple1']%2==0){
                                 for(let i=0;i<4;i++){
@@ -451,7 +460,11 @@ async function main_loop(){
                         print_map();
                         clock[1]=0;
                     }
-                    if(clock[0]>=(6-hard)*150){
+                    if(clock[0]>=(6-hard)*game_base_delay){
+                        if(AUTO_PLAY){
+                            temp_face=auto_play_find_best_action(1,0,0);
+                            temp_face=temp_face[0];
+                        }
                         face[0]=(face[0]+temp_face+4)%4;
                         temp_face=0;
                         const stats=next_map(1);
@@ -514,7 +527,14 @@ async function main_loop(){
                             document.getElementById('webrtc_answer').value='';
                             document.getElementById('webrtc_set').style.display='';
                             temp_data['webrtc_step']=1;
-                            UART_port=null;
+                            UART_port['port']=null;
+                        }else if(temp_data['webrtc_step']==3){
+                            clock[0]=0;
+                        }else if(temp_data['webrtc_step']==4){
+                            if(clock[0]>=10000){
+                                step=98;
+                                temp_data['webrtc_step']=0;
+                            }
                         }else if(temp_data['webrtc_step']<10){
 
                         }else if(temp_data['webrtc_step']===11){
@@ -532,11 +552,11 @@ async function main_loop(){
                             clock[0]=0;
                             clock[2]=0;
                         }else{
-                            UART_port.on('close',()=>{
+                            UART_port['port'].on('close',()=>{
                                 temp_data['webrtc_close']=true;
                             });
-                            UART_writer={'write':(data)=>{try{UART_port.send(data.toString())}catch(error){}}};
-                            UART_port.on('data',(data)=>{RX_buffer.push(Number(data))});
+                            UART_port['write']=(data)=>{try{UART_port['port'].send(data.toString())}catch(error){}};
+                            UART_port['port'].on('data',(data)=>{RX_buffer.push(Number(data))});
                             document.getElementById('webrtc_set').style.display='none';
                             temp_data['webrtc_step']=12;
                         }
@@ -548,11 +568,24 @@ async function main_loop(){
                         step=999;
                         RX_buffer=[];
                         try{
-                            UART_port=await navigator.serial.requestPort();
-                            await port.open({ baudRate: 9600 });
-                            UART_writer=port.writable.getWriter();
+                            if(!UART_port['port']){
+                                UART_port['port']=await navigator.serial.requestPort();
+                                await UART_port['port'].open({ baudRate: 9600 });
+                            }
+                            if(UART_port['port']&&UART_port['port'].writable&&!UART_port['writer']){
+                                UART_port['writer']=UART_port['port'].writable.getWriter();
+                            }
+                            if(UART_port['port']&&UART_port['port'].readable&&!UART_port['reader']){
+                                UART_port['reader']=UART_port['port'].readable.getReader();
+                            }
+                            UART_port['write']=(data)=>{
+                                    let send=new Uint8Array(1);
+                                    send[0]=data%256;
+                                    UART_port['writer'].write(send);
+                                }
                             step=1;
                         }catch(error){
+                            console.log(error);
                             step=98;
                         }
                     }
@@ -560,13 +593,14 @@ async function main_loop(){
                 }
                 case 1:{
                     if(RX_buffer.length>0&&RX_buffer.shift()===112){
-                        UART_writer.write(112);
+                        UART_port.write(112);
                         LCD_PRINTTURESTRING(0,1,"Exchange Seed!");
-                        UART_writer.write(115);
+                        UART_port.write(115);
                         clock[1]=0;
                         step++;
                     }else if(clock[0]>=1000){
-                        UART_writer.write(112);
+                        RX_buffer=[];
+                        UART_port.write(112);
                         clock[0]=0;
                     }
                     if(clock[2]>=20000){
@@ -578,12 +612,15 @@ async function main_loop(){
                     break;
                 }
                 case 2:{
-                    if(RX_buffer.length>0&&RX_buffer.shift()===115){
-                        temp_data['own_seed']=(clock[3]+GET_ADC_VALUE())%256;
-                        UART_writer.write(temp_data['own_seed']);
-                        clock[1]=0;
-                        step++;
-                        break;
+                    if(clock[1]>=100){
+                        if(RX_buffer.length>0&&RX_buffer.shift()===115){
+                            random=new RNG(clock[3]+GET_ADC_VALUE());
+                            temp_data['own_seed']=Math.floor(random.next()*256);
+                            UART_port.write(temp_data['own_seed']);
+                            clock[1]=0;
+                            step++;
+                            break;
+                        }
                     }
                     if(clock[1]>=1000){
                         LCD_PRINTTURESTRING(0,1,"                ");
@@ -592,19 +629,21 @@ async function main_loop(){
                     break;
                 }
                 case 3:{
-                    if(RX_buffer.length>0){
-                        temp_data['other_seed']=RX_buffer.shift();
-                        clock[1]=0;
-                        if(temp_data['own_seed']==temp_data['other_seed']){
-                            UART_writer.write(115);
-                            step=2;
-                        }else{
-                            temp_data['seed']=(temp_data['own_seed']+temp_data['other_seed'])%256;
-                            random=new RNG(temp_data['seed']);
-                            temp_data['own_order']=(temp_data['own_seed']>temp_data['other_seed'])?1:2;
-                            LCD_PRINTTURESTRING(0,1,"Exchange Diff!");
-                            UART_writer.write(100);
-                            step++;
+                    if(clock[1]>=100){
+                        if(RX_buffer.length>0){
+                            temp_data['other_seed']=RX_buffer.shift();
+                            clock[1]=0;
+                            if(temp_data['own_seed']==temp_data['other_seed']){
+                                UART_port.write(115);
+                                step=2;
+                            }else{
+                                temp_data['seed']=(temp_data['own_seed']+temp_data['other_seed'])%256;
+                                random=new RNG(temp_data['seed']);
+                                temp_data['own_order']=(temp_data['own_seed']>temp_data['other_seed'])?1:2;
+                                LCD_PRINTTURESTRING(0,1,"Exchange Diff!");
+                                UART_port.write(100);
+                                step++;
+                            }
                         }
                     }
                     if(clock[1]>=1000){
@@ -614,11 +653,13 @@ async function main_loop(){
                     break;
                 }
                 case 4:{
-                    if(RX_buffer.length>0&&RX_buffer.shift()===100){
-                        UART_writer.write(hard);
-                        clock[1]=0;
-                        step++;
-                        break;
+                    if(clock[1]>=100){
+                        if(RX_buffer.length>0&&RX_buffer.shift()===100){
+                            UART_port.write(hard);
+                            clock[1]=0;
+                            step++;
+                            break;
+                        }
                     }
                     if(clock[1]>=1000){
                         LCD_PRINTTURESTRING(0,1,"                ");
@@ -627,13 +668,15 @@ async function main_loop(){
                     break;
                 }
                 case 5:{
-                    if(RX_buffer.length>0){
-                        temp_data['other_hard']=RX_buffer.shift();
-                        temp_data['game_hard']=(Math.floor(hard+temp_data['other_hard'])/2)%6;
-                        UART_writer.write(83);
-                        clock[1]=0;
-                        step++;
-                        break;
+                    if(clock[1]>=100){
+                        if(RX_buffer.length>0){
+                            temp_data['other_hard']=RX_buffer.shift();
+                            temp_data['game_hard']=(Math.floor(hard+temp_data['other_hard'])/2)%6;
+                            UART_port.write(83);
+                            clock[1]=0;
+                            step++;
+                            break;
+                        }
                     }
                     if(clock[1]>=1000){
                         LCD_PRINTTURESTRING(0,1,"                ");
@@ -642,19 +685,25 @@ async function main_loop(){
                     break;
                 }
                 case 6:{
-                    if(RX_buffer.length>0&&RX_buffer.shift()===83){
-                        LCD_PRINTTURESTRING(0,0,'Connect Success!');
-                        LCD_PRINTTURESTRING(0,1,"                ");
-                        LCD_PRINTTURESTRING(0,2,"Your are Player"+temp_data['own_order'].toString());
-                        const body=[[0x00,0xE0,0xE0,0xE0],[0x00,0xA0,0x40,0xA0]];
-                        for(let i=0;i<12;i++){
-                            LCD_PRINTBLOCK((i+10)*4,6,body[temp_data['own_order']-1]);
+                    if(clock[1]>=100){
+                        if(RX_buffer.length>0&&RX_buffer.shift()===83){
+                            LCD_PRINTTURESTRING(0,0,'Connect Success!');
+                            LCD_PRINTTURESTRING(0,1,"                ");
+                            LCD_PRINTTURESTRING(0,2,"Your are Player"+temp_data['own_order'].toString());
+                            const body=[[0x00,0xE0,0xE0,0xE0],[0x00,0xA0,0x40,0xA0]];
+                            for(let i=0;i<12;i++){
+                                LCD_PRINTBLOCK((i+10)*4,6,body[temp_data['own_order']-1]);
+                            }
+                            clock[0]=0;
+                            temp_data['win_count']=[0,0];
+                            temp_data['game_turn']=1;
+                            step++;
+                            break;
                         }
-                        clock[0]=0;
-                        temp_data['win_count']=[0,0];
-                        temp_data['game_turn']=1;
-                        step++;
-                        break;
+                    }
+                    if(clock[1]>=1000){
+                        LCD_PRINTTURESTRING(0,1,"                ");
+                        step=1;
                     }
                     break;
                 }
@@ -670,7 +719,7 @@ async function main_loop(){
                     break;
                 }
                 case 8:{
-                    LCD_PRINTTURESTRING(4,1,"TIMEOUT!");
+                    LCD_PRINTTURESTRING(0,1,"    TIMEOUT!    ");
                     LCD_PRINTTURESTRING(2,3,"PRESS BUTTON");
                     step++;
                     break;
@@ -730,7 +779,7 @@ async function main_loop(){
                             temp_face=0;
                         }
                     }
-                    if(clock[3]>=50){
+                    if(clock[3]>=100){
                         if(temp_data['eat_new_apple1']>=0){
                             if(temp_data['eat_new_apple1']%2==0){
                                 for(let i=0;i<2;i++){
@@ -765,6 +814,12 @@ async function main_loop(){
                                 LED_PWM(1,temp_data['win_count'][1]>=2?255:0);
                             }
                         }
+                        if(!(temp_data['eat_new_apple1']>=0||temp_data['eat_new_apple2']>=0)){
+                            LED_PWM(3,temp_data['win_count'][0]>=1?255:0);
+                            LED_PWM(2,temp_data['win_count'][0]>=2?255:0);
+                            LED_PWM(0,temp_data['win_count'][1]>=1?255:0);
+                            LED_PWM(1,temp_data['win_count'][1]>=2?255:0);
+                        }
                         clock[3]=0;
                     }
                     if(clock[1]>=500){
@@ -780,44 +835,47 @@ async function main_loop(){
                         print_map();
                         clock[1]=0;
                     }
-                    if(clock[0]>=(6-temp_data['game_hard'])*150){
+                    if(clock[0]>=(6-temp_data['game_hard'])*game_base_delay){
                         if(!temp_data['wait']){
-                            temp_data['game_step']=(temp_data['game_step']+1)%256;
-                            UART_writer.write(temp_data['game_step']);
+                            temp_data['game_step']=(temp_data['game_step']+1)%100;
+                            UART_port.write(temp_data['game_step']);
+                            if(AUTO_PLAY){
+                                temp_face=auto_play_find_best_action(2,temp_data['own_order']-1,99,2)[0];//((other_face-face[temp_data['own_order']%2]-4)%4));
+                            }
                             face[temp_data['own_order']-1]=(face[temp_data['own_order']-1]+temp_face+4)%4;
                             temp_face=0;
-                            UART_writer.write(face[temp_data['own_order']-1]);
+                            UART_port.write(face[temp_data['own_order']-1]);
                             temp_data['wait']=1;
                             clock[2]=0;
                         }
                         clock[0]=0;
                     }
-                    if(temp_data['wait']){
+                    if(temp_data['wait']>0){
                         if(clock[2]>=1000){
                             step=80;
                             break;
-                        }else{
+                        }else if(clock[2]>=10){
                             if(temp_data['wait']==1&&RX_buffer.length>0){
                                 if(temp_data['game_step']===RX_buffer.shift()){
-                                    temp_data['wait']++;
+                                    temp_data['wait']=2;
                                 }else{
-                                    step=80;
-                                    break;
+                                    // step=80;
+                                    // break;
                                 }
-                            }
-                            if(temp_data['wait']==2&&RX_buffer.length>0){
+                            }else if(temp_data['wait']==2&&RX_buffer.length>0){
                                 temp_data['wait']=0;
-                                face[temp_data['own_order']%2]=(RX_buffer.shift())%4;
+                                const other_face=(RX_buffer.shift())%4;
+                                face[temp_data['own_order']%2]=other_face;
                                 const stats=next_map(2);
                                 print_map();
                                 if(1<=stats&&stats<=4){
                                     temp_data['stats']=stats;
-                                    UART_writer.write(stats);
+                                    UART_port.write(stats);
                                     step=19;
                                 }else if(stats>10){
-                                    if(stats%10==1){
+                                    if(stats%10==2){
                                         temp_data['eat_new_apple1']=10;
-                                    }else if(stats%10==2){
+                                    }else if(stats%10==1){
                                         temp_data['eat_new_apple2']=10;
                                     }else if(stats%10==3){
                                         temp_data['eat_new_apple1']=10;
@@ -838,6 +896,11 @@ async function main_loop(){
                                 step=20;
                             }else{
                                 step=22;
+                                if(score[0]>score[1]){
+                                    step=20;
+                                }else if(score[0]<score[1]){
+                                    step=21;
+                                }
                             }
                         }else{
                             step=80;
@@ -910,13 +973,13 @@ async function main_loop(){
                     break;
                 }
                 case 26:{
-                    if(clock[3]>=50){
+                    if(clock[3]>=100){
                         LED_PWM(3,temp_data['win_count'][0]>=2&&(clock[4]>clock[3])?255:0);
                         LED_PWM(2,temp_data['win_count'][0]>=2&&(clock[4]>clock[3])?255:0);
                         LED_PWM(0,temp_data['win_count'][1]>=2&&(clock[4]>clock[3])?255:0);
                         LED_PWM(1,temp_data['win_count'][1]>=2&&(clock[4]>clock[3])?255:0);
                         clock[3]=0;
-                        if(clock[4]>=100){
+                        if(clock[4]>=200){
                             clock[4]=0;
                         }
                     }
@@ -938,11 +1001,16 @@ async function main_loop(){
                 }
                 case 90:{
                     if(use_webrtc){
-                        //UART_port.on('close',()=>{});
+                        // UART_port.on('close',()=>{});
                         step=99;
                     }else{
                         try {
-                            await port.close();
+                            // UART_port['writer'].releaseLock();
+                            // UART_port['reader'].releaseLock();
+                            // await UART_port['port'].close();
+                            // UART_port['port']=null;
+                            // UART_port['writer']=null;
+                            // UART_port['reader']=null;
                             player_mode=0;
                             step=0;
                         }catch(error){
@@ -986,32 +1054,36 @@ async function main_loop(){
 
 LCD_RESET();
 
-let UART_delay_counter=0;
-setInterval(async ()=>{
-    for(let i=0;i<clock.length;i++){
-        clock[i]+=4;
-        if(clock[i]>=4294967295){
-            clock[i]=0;
-        }
-    }
-    UART_delay_counter+=4;
-    if(UART_delay_counter>=200){
-        if(!use_webrtc&&UART_port){
-            const UART_reader=UART_port.readable.getReader();
-            try{
-                const {value,done }=await UART_reader.read();
-                while(1){
-                    if(done||RX_buffer.length>=10){
-                        break;
-                    }
-                    RX_buffer.push(value)
-                }
-                UART_reader.releaseLock();
-            }catch(error){
-                console.error('Error reading data:', error);
+setInterval(()=>{
+    if(!pause){
+        for(let i=0;i<clock.length;i++){
+            clock[i]+=4;
+            if(clock[i]>=4294967295){
+                clock[i]=0;
             }
         }
-        UART_delay_counter=0;
+        main_loop();
     }
-    main_loop();
 },4);
+
+readData();
+async function readData(){
+    async function readLoop() {
+        if(!use_webrtc&&UART_port['port']&&UART_port['reader']){
+            try{
+                const {value,done }=await UART_port['reader'].read();
+                if(done){
+                    UART_port['reader'].releaseLock();
+                    return;
+                }
+                RX_buffer.push(value[0]);
+                setTimeout(readLoop, 0);
+            }catch(error){
+                console.error('Error:', error);
+            }
+        }else{
+            setTimeout(readLoop, 0);
+        }
+    }
+  readLoop();
+}

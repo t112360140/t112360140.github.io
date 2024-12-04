@@ -2,9 +2,12 @@
     <head>
         <script src="js/lib.js"></script>
         <script src="js/simplepeer.min.js"></script>
+
+        <script src="js/auto_play.js"></script>
     </head>
     <body style="user-select: none;">
-        <span style="white-space:nowarp;">Use WebRTC as UART:<input type="checkbox" onchange="use_webrtc=this.checked;"></span>
+        <span style="white-space:nowarp;">Use WebRTC as UART:<input type="checkbox" onchange="use_webrtc=this.checked;"></span><br>
+        <span style="white-space:nowarp;">Auto Play:<input type="checkbox" onchange="AUTO_PLAY=this.checked;"></span>
         <div style="height:95%;width:100%;position:relative;">
             <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);">
                 <canvas id="canvas" style="height:512px;width:1024px;margin:auto;" height="512" width="1024"></canvas>
@@ -59,49 +62,49 @@
             <table style="margin:4%;height:92%;width:92%;" border="1">
                 <tr style="height:48%;">
                     <td style="width:80px;">Offer:</td>
-                    <td><textarea id="webrtc_offer" style="height:100%;width:100%" onchange="
-                        if(!UART_port&&this.value!=''&&temp_data['webrtc_step']==1){
+                    <td><textarea id="webrtc_offer" style="height:100%;width:100%;resize:none;" onchange="
+                        if(!UART_port['port']&&this.value!=''&&temp_data['webrtc_step']==1){
                             temp_data['webrtc_step']=3;
-                            UART_port=new SimplePeer();
-                            UART_port.on('error',(err)=>{
+                            UART_port['port']=new SimplePeer();
+                            UART_port['port'].on('error',(err)=>{
                                 console.log(err);
                             });
                             document.getElementById('webrtc_answer').value='';
-                            UART_port.on('signal',(data)=>{
+                            UART_port['port'].on('signal',(data)=>{
                                 if(document.getElementById('webrtc_answer').value==''){
                                     document.getElementById('webrtc_answer').value=JSON.stringify(data);
                                 }
                             });
-                            UART_port.on('connect',()=>{
+                            UART_port['port'].on('connect',()=>{
                                 temp_data['webrtc_step']=10;
                             });
-                            UART_port.signal(JSON.parse(this.value));
+                            UART_port['port'].signal(JSON.parse(this.value));
                         }
                     "></textarea></td>
                 </tr>
                 <tr style="height:48%;">
                     <td>Answer:</td>
-                    <td><textarea id="webrtc_answer" style="height:100%;width:100%" onchange="
-                        if(UART_port&&this.value!=''&&temp_data['webrtc_step']==2){
+                    <td><textarea id="webrtc_answer" style="height:100%;width:100%;resize:none;" onchange="
+                        if(UART_port['port']&&this.value!=''&&temp_data['webrtc_step']==2){
                             temp_data['webrtc_step']=3;
-                            UART_port.on('connect',()=>{
+                            UART_port['port'].on('connect',()=>{
                                 temp_data['webrtc_step']=10;
                             });
-                            UART_port.signal(JSON.parse(this.value));
+                            UART_port['port'].signal(JSON.parse(this.value));
                         }
                     "></textarea></td>
                 </tr>
                 <tr style="height:4%;">
                     <td style="white-space:nowarp;" colspan="2">
                         <button style="width:100%;" onclick="
-                            UART_port=new SimplePeer({
+                            UART_port['port']=new SimplePeer({
                                 initiator:true,
                                 trickle:false
                             });
-                            UART_port.on('error',(err)=>{
+                            UART_port['port'].on('error',(err)=>{
                                 console.log(err);
                             });
-                            UART_port.on('signal',(data)=>{
+                            UART_port['port'].on('signal',(data)=>{
                                 if(document.getElementById('webrtc_offer').value==''){
                                     document.getElementById('webrtc_offer').value=JSON.stringify(data);
                                 }
