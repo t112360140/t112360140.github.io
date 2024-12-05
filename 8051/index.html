@@ -207,8 +207,16 @@ TABLE:	DB	01111110B
                     </td>
                 </tr>
             </table><br>
-            <div id="Log" syle="width:100%;display:none;">
-                <textarea id="X8051-log" style="width:50%;float:left;resize:none;" wrap="off"></textarea>
+            <button onclick="
+                const log_div=document.getElementById('log');
+                if(log_div.style.display=='none'){
+                    log_div.style.display='';
+                }else{
+                    log_div.style.display='none';
+                }
+            ">LOG</button>
+            <div id="log" style="width:100%;display:none;">
+                <textarea id="X8051-log" style="height:50%;width:50%;margin:10px;float:left;resize:none;" wrap="off" readonly></textarea>
             </div>
         </div>
         <script>
@@ -241,6 +249,7 @@ TABLE:	DB	01111110B
                     }else if(s.includes('C:\\>')){
                         X8051Output.start=false;
                         X8051Output.output=X8051Output.output.replace(/\n$/g,'');
+                        document.getElementById('X8051-log')=X8051Output.output;
                     }else if(X8051Output.start&&(/^ +[0-9]+   /.test(s))){
                         X8051Output.output+=s;
                     }
