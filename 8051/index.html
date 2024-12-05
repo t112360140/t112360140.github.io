@@ -20,7 +20,42 @@
                                     this.value=this.value.substring(0,start)+'\t'+this.value.substring(end);
                                     this.selectionStart =this.selectionEnd=start+1;
                                 }
-                                " wrap="off"></textarea>
+                                " wrap="off">
+        ORG	00H
+        JMP	START
+
+START:	MOV	SP,#30H
+        MOV	IE,#00H
+        MOV	PSW,#00H
+        MOV	DPTR,#TABLE
+        MOV	P0,#00H
+
+NEXT:	MOV	A,R0
+        MOVC	A,@A+DPTR
+        MOV	P1,A
+        MOV	R5,#10
+        MOV	R5,#10
+        CALL	DELAY
+        INC	R0
+        CJNE	R0,#6,NEXT
+        MOV	R0,#00H
+        JMP	NEXT
+
+DELAY:	MOV	R6,#40
+DEL:	MOV	R7,#248
+        DJNZ	R7,$
+        DJNZ	R6,DEL
+        DJNZ	R5,DELAY
+        RET
+
+TABLE:	DB	01111110B
+        DB	10111101B
+        DB	11011011B
+        DB	11100111B
+        DB	11011011B
+        DB	10111101B
+        END    
+                            </textarea>
                                 <input type="file" onchange="
                                     {
                                         const _file=this.files[0];
