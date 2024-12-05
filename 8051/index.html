@@ -73,10 +73,10 @@ TABLE:	DB	01111110B
                                 const text=document.getElementById('asm').value;
                                     if(text!=''&&dosCi){
                                         const code=new TextEncoder().encode(text);
-                                        dosCi.fsWriteFile('./code.asm',code);
+                                        dosCi.fsWriteFile('./CODE.ASM',code);
                                         sendKey([
                                             82,69,83,67,65,78,257,                     //RESCAN
-                                            88,56,48,53,49,32,45,84,32,3401,67,79,68,69,3400,46,3401,65,83,77,3400,//X8051 -T CODE.ASM
+                                            88,56,48,53,49,32,45,84,32,67,79,68,69,46,65,83,77,//X8051 -T CODE.ASM
                                             // ,3401,46,3400,              //>
                                             // 88,56,48,53,49,76,79,71,46,84,88,84,  //X8051_LOG.TXT,
                                             257,
