@@ -236,10 +236,10 @@ TABLE:	DB	01111110B
                 };
             
             var DOS;
-            DOS=newX8051DOS();
+            newX8051DOS();
 
             function newX8051DOS(){
-                return changeDOS(document.getElementById("dos"),'./jsdos/X8051.jsdos',(s)=>{
+                DOS=changeDOS(document.getElementById("dos"),'./jsdos/X8051.jsdos',(s)=>{
                     if(s.includes('Assembly Errors :  0')){
                         document.getElementById('linkBT').click();
                     }
