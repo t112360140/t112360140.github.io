@@ -93,7 +93,10 @@ TABLE:	DB	01111110B
                                         67,79,68,69,257,                    //CODE
                                         257,257,257,257,88,257,
                                     ]);
-                                ">Link</button>
+                                ">Link</button><br><br>
+                                <button style="width:100%;" onclick="
+                                    DOS=newX8051DOS();
+                                ">Reset DOS</button>
                             </td>
                         </tr>
                     </table>
@@ -232,29 +235,34 @@ TABLE:	DB	01111110B
                     output:'',
                 };
             
-            let DOS=newDOS(document.getElementById("dos"),'./jsdos/X8051.jsdos',(s)=>{
-                if(s.includes('Assembly Errors :  0')){
-                    document.getElementById('linkBT').click();
-                }
-                if(autoLink&&s.includes('Link Errors :  0')){
-                    dosCi.fsReadFile('./CODE.TSK')
-                        .then((data)=>{
-                            file=data;
-                        });
-                }
-                if(X8051Output.log){
-                    if(s.includes('x8051 -t code.asm')){
-                        X8051Output.start=true;
-                        X8051Output.output='';
-                    }else if(s.includes('C:\\>')){
-                        X8051Output.start=false;
-                        X8051Output.output=X8051Output.output.replace(/\n$/g,'');
-                        document.getElementById('X8051-log').value=X8051Output.output;
-                    }else if(X8051Output.start&&(/^ +[0-9]+   /.test(s))){
-                        X8051Output.output+=s;
+            let DOS=newX8051DOS();
+
+            function newX8051DOS(){
+                return newDOS(document.getElementById("dos"),'./jsdos/X8051.jsdos',(s)=>{
+                    if(s.includes('Assembly Errors :  0')){
+                        document.getElementById('linkBT').click();
                     }
-                }
-            });
+                    if(autoLink&&s.includes('Link Errors :  0')){
+                        dosCi.fsReadFile('./CODE.TSK')
+                            .then((data)=>{
+                                file=data;
+                            });
+                    }
+                    if(X8051Output.log){
+                        if(s.includes('x8051 -t code.asm')){
+                            X8051Output.start=true;
+                            X8051Output.output='';
+                            document.getElementById('X8051-log').value='';
+                        }else if(s.includes('C:\\>')){
+                            X8051Output.start=false;
+                            X8051Output.output=X8051Output.output.replace(/\n$/g,'');
+                            document.getElementById('X8051-log').value=X8051Output.output;
+                        }else if(X8051Output.start&&(/^ +[0-9]+   /.test(s))){
+                            X8051Output.output+=s;
+                        }
+                    }
+                });
+            }
 
             function newDOS(element,url='',action){
                 return Dos(element,{
