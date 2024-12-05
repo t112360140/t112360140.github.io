@@ -215,6 +215,11 @@ TABLE:	DB	01111110B
 
             let dosCi,dosInputEnable=false;
             let autoLink=true;
+            let X8051Output={
+                    log:true,
+                    start:false,
+                    output:'',
+                };
             
             let DOS=newDOS(document.getElementById("dos"),'./jsdos/X8051.jsdos',(s)=>{
                 if(s.includes('Assembly Errors :  0')){
@@ -225,6 +230,17 @@ TABLE:	DB	01111110B
                         .then((data)=>{
                             file=data;
                         });
+                }
+                if(X8051Output.log){
+                    if(s.includes('x8051 -t code.asm')){
+                        X8051Output.start=true;
+                        X8051Output.output='';
+                    }else if(s.includes('C:\\>')){
+                        X8051Output.start=false;
+                        X8051Output.output=X8051Output.output.replace(/\n$/g,'');
+                    }else{
+                        X8051Output.output+=`${s}\n`;
+                    }
                 }
             });
 
