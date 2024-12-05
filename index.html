@@ -1,3 +1,577 @@
-<h1>HI!</h1>
-<a href="/Tetris AI" target="_blank">Tetris AI</a><br>
-<a href="/Snake AI" target="_blank">Snake AI</a>
+<html>
+    <head>
+        <title>8051 Tool</title>
+        <meta charset="utf-8">
+        <!-- <link rel="stylesheet" href="https://v8.js-dos.com/latest/js-dos.css"> -->
+        <script src="js/js-dos.js"></script>
+    </head>
+    <body>
+        <div style="height:100%;width:100%;">
+            <div style="height:70%;width:100%;">
+                <div style="height:100%;width:50%;float:left;">
+                    <table style="height:100%;width:100%;">
+                        <tr>
+                            <td>
+                                <textarea id="asm" style="height:100%;width:100%;resize:none;margin-top:20px;" onkeydown="
+                                if (e.key == 'Tab') {
+                                    e.preventDefault();
+                                    var start = this.selectionStart;
+                                    var end = this.selectionEnd;
+                                    this.value=this.value.substring(0,start)+'\t'+this.value.substring(end);
+                                    this.selectionStart =this.selectionEnd=start+1;
+                                }
+                                " wrap="off">
+        ORG	00H
+        JMP	START
+
+START:	MOV	SP,#30H
+        MOV	IE,#00H
+        MOV	PSW,#00H
+        MOV	DPTR,#TABLE
+        MOV	P0,#00H
+
+NEXT:	MOV	A,R0
+        MOVC	A,@A+DPTR
+        MOV	P1,A
+        MOV	R5,#10
+        MOV	R5,#10
+        CALL	DELAY
+        INC	R0
+        CJNE	R0,#6,NEXT
+        MOV	R0,#00H
+        JMP	NEXT
+
+DELAY:	MOV	R6,#40
+DEL:	MOV	R7,#248
+        DJNZ	R7,$
+        DJNZ	R6,DEL
+        DJNZ	R5,DELAY
+        RET
+
+TABLE:	DB	01111110B
+        DB	10111101B
+        DB	11011011B
+        DB	11100111B
+        DB	11011011B
+        DB	10111101B
+        END</textarea>
+                                <input type="file" onchange="
+                                    {
+                                        const _file=this.files[0];
+                                        if(_file){
+                                            const _reader=new FileReader();
+                                            _reader.onload=()=>{
+                                                document.getElementById('asm').value=_reader.result;
+                                            }
+                                            _reader.readAsText(_file);
+                                        }
+                                    }
+                                ">
+                            </td>
+                            <td style="width:50px;">
+                                <button style="width:100%;" onclick="
+                                const text=document.getElementById('asm').value;
+                                    if(text!=''&&dosCi){
+                                        const code=new TextEncoder().encode(text);
+                                        dosCi.fsWriteFile('./CODE.ASM',code);
+                                        sendKey([
+                                            82,69,83,67,65,78,257,                     //RESCAN
+                                            88,56,48,53,49,32,45,84,32,67,79,68,69,46,65,83,77,//X8051 -T CODE.ASM
+                                            // ,3401,46,3400,              //>
+                                            // 88,56,48,53,49,76,79,71,46,84,88,84,  //X8051_LOG.TXT,
+                                            257,
+                                        ],()=>{
+
+                                        });
+                                    }
+                                ">&gt;</button><br><br>
+                                <button id="linkBT" style="width:100%;" onclick="
+                                    sendKey([
+                                        76,73,78,75,52,257,                 //LINK4
+                                        67,79,68,69,257,                    //CODE
+                                        257,257,257,257,88,257,
+                                    ]);
+                                ">Link</button><br><br>
+                                <button style="width:100%;" onclick="
+                                    DOS=newX8051DOS();
+                                ">Reset</button>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div style="width:50%;float:right;">
+                    <div id="dos" style="width:100%;" tabindex="0" onfocus="
+                            dosInputEnable=true;
+                        " onblur="
+                            dosInputEnable=false;
+                        "></div><br>
+                    <table style="margin:auto;user-select:none;min-width:150px;" border="1">
+                        <tr>
+                            <td align="center" style="cursor:pointer;" onclick="
+                                printFileTree();
+                                const tree=document.getElementById('file-tree');
+                                if(tree.style.display=='none'){
+                                    tree.style.display='';
+                                }else{
+                                    tree.style.display='none';
+                                }
+                            ">File Tree</td>
+                        </tr>
+                        <tr>
+                            <td><div id="file-tree" style="width:100%;display:none;"></div></td>
+                        </tr>
+                    </table>
+                    <table style="margin:auto;display:none;" border="1">
+                        <tr>
+                            <td align="center">Upload File</td>
+                            <td align="center">Download File</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input type="file" onchange="
+                                    {
+                                        const _file=this.files;
+                                        uploadFile(_file,0,this);
+                                        function uploadFile(file,n=0,element){
+                                            const _reader=new FileReader();
+                                            _reader.onload=()=>{
+                                                if(dosCi){
+                                                    dosCi.fsWriteFile(`./${file[n].name}`,new Uint8Array(_reader.result))
+                                                        .then(()=>{
+                                                            if(n<file.length-1){
+                                                                uploadFile(file,n+1,element);
+                                                            }else{
+                                                                sendKey([82,69,83,67,65,78,257]);
+                                                                element.value='';
+                                                            }
+                                                        });
+                                                }
+                                            }
+                                            _reader.readAsArrayBuffer(file[n]);
+                                        }
+                                    }
+                                " multiple>
+                            </td>
+                            <td>
+                                <input id="downloadFilePath" placeholder="path/file">
+                                <button onclick="
+                                    let path=document.getElementById('downloadFilePath').value;
+                                    if(path!=''){
+                                        path=path.toUpperCase();
+                                        dosCi.fsReadFile(path)
+                                            .then((data)=>{
+                                                const blob=new Blob([data.buffer]);
+                                                const url=window.URL.createObjectURL(blob);
+                                                const a=document.createElement('a');
+                                                a.download=path.split('/').pop(1);
+                                                a.href=url;
+                                                a.click();
+                                            })
+                                            .catch(e=>{})
+                                    }
+                                ">Download</button>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <table border="1" style="margin:50px auto 0 auto;">
+                <tr>
+                    <td>
+                        <input type="file" onchange="
+                            const reader=new FileReader();
+                            reader.onload=()=>{
+                                file=new Uint8Array(reader.result);
+                            }
+                            reader.readAsArrayBuffer(this.files[0]);
+                        ">
+                    </td>
+                    <td>
+                        <button onclick="connect_UART();" style="width:100%;">Connect UART</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <progress id="progress" min="0" value="0" style="width:100%;">0%</progress>
+                    </td>
+                    <td>
+                        <button onclick="
+                            if(!file){
+                                alert('Not file!');
+                            }else if(!UART){
+                                alert('Not Connect UART!');
+                            }else{
+                                download();
+                            }
+                        " style="width:100%;">Download</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        Download .TSK:
+                    </td>
+                    <td>
+                        <button onclick="
+                            if(file){
+                                const blob=new Blob([file.buffer]);
+                                const url=window.URL.createObjectURL(blob);
+                                const a=document.createElement('a');
+                                a.download='code.TSK';
+                                a.href=url;
+                                a.click();
+                            }
+                        " style="width:100%;">Download</button>
+                    </td>
+                </tr>
+            </table><br>
+            <button onclick="
+                const log_div=document.getElementById('log');
+                if(log_div.style.display=='none'){
+                    log_div.style.display='';
+                }else{
+                    log_div.style.display='none';
+                }
+            ">OTHER</button>
+            <div id="log" style="width:100%;display:none;">
+                <textarea id="X8051-log" style="height:50%;width:50%;margin:10px 0 10px 0;float:left;resize:none;" wrap="off" readonly></textarea>
+                <div style="height:50%;width:50%;margin:10px 0 30px 0;float:right;">
+                    <textarea id="file-viewer" style="height:100%;width:100%;resize:none;" wrap="off"></textarea>
+                    <button style="float:right;" onclick="
+                        if(viewPath){
+                            const text=new TextEncoder().encode(document.getElementById('file-viewer').value);
+                            dosCi.fsWriteFile(viewPath,text)
+                                .then(()=>{sendKey([82,69,83,67,65,78,257]);});
+                        }
+                    ">Save</button>
+                </div>
+            </div>
+        </div>
+        <script>
+            let UART,UART_writer,UART_reader;
+            let RX_buffer=[];
+            var file;
+
+            let dosCi,dosInputEnable=false;
+            let autoLink=true;
+            let X8051Output={
+                    log:true,
+                    start:false,
+                    output:'',
+                };
+            
+            var DOS;
+            newX8051DOS();
+
+            function newX8051DOS(){
+                changeDOS(document.getElementById("dos"),'./jsdos/X8051.jsdos',(s)=>{
+                    if(s.includes('Assembly Errors :  0')){
+                        document.getElementById('linkBT').click();
+                    }
+                    if(autoLink&&s.includes('Link Errors :  0')){
+                        dosCi.fsReadFile('./CODE.TSK')
+                            .then((data)=>{
+                                file=data;
+                            });
+                    }
+                    if(X8051Output.log){
+                        if(s.includes('x8051 -t code.asm')){
+                            X8051Output.start=true;
+                            X8051Output.output='';
+                            document.getElementById('X8051-log').value='';
+                        }else if(s.includes('C:\\>')){
+                            X8051Output.start=false;
+                            X8051Output.output=X8051Output.output.replace(/\n$/g,'');
+                            document.getElementById('X8051-log').value=X8051Output.output;
+                        }else if(X8051Output.start&&(/^ +[0-9]+   /.test(s))){
+                            X8051Output.output+=s;
+                        }
+                    }
+                });
+            }
+
+            function newDOS(element,url='',action){
+                return Dos(element,{
+                    url: url,
+                    autoStart:true,
+                    kiosk:true,
+                    onEvent: (event,ci)=>{
+                        if(event=='ci-ready'){
+                            dosCi=ci;
+                            ci.events().onStdout((s)=>{
+                                if(action){
+                                    action(s);
+                                }
+                            });
+                        }
+                    },
+                });
+            }
+
+            function changeDOS(element,url='',action){
+                if(DOS){
+                    DOS.stop();
+                }
+                DOS=newDOS(element,url,action);
+            }
+
+            function sendKey(keys=[],callback){
+                if(dosCi&&keys.length>0){
+                    let key=keys.shift(1);
+                    if(key<400){
+                        dosCi.simulateKeyPress([key]);
+                    }else{
+                        dosCi.sendKeyEvent(Math.floor(key/10),(key%10==1));
+                    }
+                    setTimeout(()=>{
+                        sendKey(keys);
+                    },30);
+                }else{
+                    if(callback){
+                        callback();
+                    }
+                }
+            }
+
+            function getFileTree(callback){
+                if(dosCi){
+                    dosCi.fsTree().then((r)=>{
+                        if(callback){
+                            callback(r);
+                        }
+                    });
+                }
+            }
+
+            function uploadFile(fullPath='./',callback){
+                if(!(/\/$/.test(fullPath))){
+                    fullPath+='/';
+                }
+                const input=document.createElement('input');
+                input.type='file';
+                input.multiple=true;
+                input.onchange=()=>{
+                    _uploadFile(input.files);
+                }
+                input.click();
+                function _uploadFile(file,n=0){
+                    const _reader=new FileReader();
+                    _reader.onload=()=>{
+                        if(dosCi){
+                            dosCi.fsWriteFile(`${fullPath}${file[n].name}`,new Uint8Array(_reader.result))
+                                .then(()=>{
+                                    if(n<file.length-1){
+                                        _uploadFile(file,n+1,callback);
+                                    }else{
+                                        sendKey([82,69,83,67,65,78,257]);
+                                        if(callback){
+                                            callback();
+                                        }
+                                    }
+                                });
+                        }
+                    }
+                    _reader.readAsArrayBuffer(file[n]);
+                }
+            }
+
+            function downloadFile(path='./'){
+                if(dosCi){
+                    dosCi.fsReadFile(path)
+                        .then((data)=>{
+                            const blob=new Blob([data.buffer]);
+                            const url=window.URL.createObjectURL(blob);
+                            const a=document.createElement('a');
+                            a.download=path.split('/').pop(1);
+                            a.href=url;
+                            a.click();
+                        })
+                        .catch((error)=>{});
+                }
+            }
+
+            function fileSize(size){
+                let unit=' B';
+                if(size>1024){
+                    size/=1024;
+                    unit='KB';
+                    if(size>1024){
+                        size/=1024;
+                        unit='MB';
+                        if(size>1024){
+                            size/=1024;
+                            unit='GB';
+                        }
+                    }
+                }
+                return `${Math.floor(size)} ${unit}`;
+            }
+
+            function printFileTree(){
+                getFileTree((data)=>{
+                    document.getElementById('file-tree').innerHTML=fileTree(data);
+                    function fileTree(list,fullPath=''){
+                        if(list.nodes){
+                            let output=`<div style="width:100%;">${list.name}/</div><table style="margin-left:20px;" border="1">`;
+                            for(let i=0;i<list.nodes.length;i++){
+                                output+=`<tr><td>${fileTree(list.nodes[i],`${fullPath}${list.name}/`)}</tr></td>`;
+                            }
+                            output+=`<tr><td align="center" style="color:#00ff00;cursor:pointer;" onclick="uploadFile('${fullPath}${list.name}/',()=>{printFileTree();});" title="Upload New File">[+]</td></tr></table>`;
+                            return output;
+                        }else{
+                            return (`
+                                <span style="margin-right:50px;">
+                                    <u style="color:#0000ff;cursor:pointer;" onclick="downloadFile('${fullPath}${list.name}');">${list.name}</u>
+                                </span>
+                                <u style="float:right;margin-right:5px;cursor:pointer;" onclick="viewFile('${fullPath}${list.name}');" title="View File">V</u>
+                                <span style="float:right;margin-right:5px;" title="${list.size} byte">${fileSize(list.size)}</span>
+                            `);
+                        }
+                    }
+                });
+            }
+
+            var viewPath;
+            function viewFile(path){
+                if(path&&dosCi){
+                    dosCi.fsReadFile(path)
+                        .then((data)=>{
+                            viewPath=path;
+                            document.getElementById('file-viewer').value=new TextDecoder().decode(data);
+                        })
+                        .catch((error)=>{});
+                }
+            }
+
+            window.addEventListener('keydown', function(event){
+                if(document.activeElement.tagName='TEXTAREA'){
+                    if (event.key=='Tab'){
+                        const textarea=document.getElementById('asm');
+                        event.preventDefault();
+                        const start=textarea.selectionStart;
+                        const end=textarea.selectionEnd;
+                        textarea.value=textarea.value.substring(0,start)+'\t'+textarea.value.substring(end);
+                        textarea.selectionStart=
+                        textarea.selectionEnd=start+1;
+                    }
+                }
+                if(!dosInputEnable){
+                    event.stopPropagation();
+                }
+            }, true);
+
+            window.addEventListener('keyup', function(event){
+                if(!dosInputEnable){
+                    event.stopPropagation();
+                }
+            }, true);
+
+            window.addEventListener('keypress', function(event){
+                if(!dosInputEnable){
+                    event.stopPropagation();
+                }
+            }, true);
+
+            async function connect_UART(){
+                UART=null;
+                UART_writer=null;
+                UART_reader=null;
+                try{
+                    UART=await navigator.serial.requestPort();
+                    await UART.open({
+                        baudRate:4800,
+                        dataBits:8,
+                        parity:'none',
+                        stopBits:1
+                    });
+                    UART_writer=UART.writable.getWriter();
+                    UART_reader=UART.readable.getReader();
+                }catch(error){
+                    console.log('Error: '+error);
+                }
+            }
+
+            function UART_send(data){
+                let temp=new Uint8Array(1);
+                temp[0]=data;
+                UART_writer.write(temp);
+            }
+
+            function download(){
+                UART_send(80);//P
+                UART_send(Math.floor(file.length/256));
+                UART_send(file.length%256);
+                download_byte();
+                function download_byte(i=0){
+                    UART_send(file[i]);
+                    waitEcho();
+                    function waitEcho(counter=0){
+                        RX_buffer=[];
+                        setTimeout(()=>{
+                            let data=0;
+                            if(RX_buffer[0]===90){//Z
+                                if(i<file.length-1){
+                                    setProgress(i+1,file.length);
+                                    download_byte(i+1);
+                                }else{
+                                    setProgress(100,100);
+                                    console.log('download finish!');
+                                    //closeUART();
+                                }
+                            }else if(counter<2000){
+                                waitEcho(counter+4);
+                            }else{
+                                setProgress(0,100);
+                                console.log('download error!');
+                                //closeUART();
+                            }
+                        },4);
+                    }
+                }
+            }
+
+            readData();
+            async function readData(){
+                async function readLoop() {
+                    if(UART_reader){
+                        try{
+                            const {value,done }=await UART_reader.read();
+                            if(done){
+                                UART_reader.releaseLock();
+                                return;
+                            }
+                            RX_buffer.push(value[0]);
+                            setTimeout(readLoop, 0);
+                        }catch(error){
+                            console.error('Error:', error);
+                        }
+                    }else{
+                        setTimeout(readLoop, 0);
+                    }
+                }
+                readLoop();
+            }
+
+            function closeUART(){
+                if(UART_reader){
+                    UART_reader.releaseLock();
+                    UART_reader=null;
+                }
+                if(UART_writer){
+                    UART_writer.releaseLock();
+                    UART_writer=null;
+                }
+                if(UART){
+                    UART.close();
+                    UART=null;
+                }
+            }
+
+            function setProgress(value=0,max=100){
+                const progress=document.getElementById('progress');
+                progress.max=max;
+                progress.value=value;
+                progress.innerHTML=`${Math.floor((value/max)*100)}%`;
+            }
+        </script>
+    </body>
+</html>
