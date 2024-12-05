@@ -235,7 +235,8 @@ TABLE:	DB	01111110B
                     output:'',
                 };
             
-            let DOS=newX8051DOS();
+            let DOS;
+            DOS=newX8051DOS();
 
             function newX8051DOS(){
                 return changeDOS(document.getElementById("dos"),'./jsdos/X8051.jsdos',(s)=>{
