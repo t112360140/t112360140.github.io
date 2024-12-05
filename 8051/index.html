@@ -239,7 +239,7 @@ TABLE:	DB	01111110B
             newX8051DOS();
 
             function newX8051DOS(){
-                DOS=changeDOS(document.getElementById("dos"),'./jsdos/X8051.jsdos',(s)=>{
+                changeDOS(document.getElementById("dos"),'./jsdos/X8051.jsdos',(s)=>{
                     if(s.includes('Assembly Errors :  0')){
                         document.getElementById('linkBT').click();
                     }
