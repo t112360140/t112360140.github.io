@@ -84,13 +84,15 @@
                                             const _reader=new FileReader();
                                             _reader.onload=()=>{
                                                 if(dosCi){
-                                                    dosCi.fsWriteFile(`./${file[n].name}`,new Uint8Array(_reader.result));
-                                                }
-                                                if(n<file.length-1){
-                                                    uploadFile(file,n+1,element);
-                                                }else{
-                                                    sendKey([82,69,83,67,65,78,257]);
-                                                    element.value='';
+                                                    dosCi.fsWriteFile(`./${file[n].name}`,new Uint8Array(_reader.result))
+                                                        .then(()=>{
+                                                            if(n<file.length-1){
+                                                                uploadFile(file,n+1,element);
+                                                            }else{
+                                                                sendKey([82,69,83,67,65,78,257]);
+                                                                element.value='';
+                                                            }
+                                                        });
                                                 }
                                             }
                                             _reader.readAsArrayBuffer(file[n]);
