@@ -238,7 +238,7 @@ TABLE:	DB	01111110B
                     }else if(s.includes('C:\\>')){
                         X8051Output.start=false;
                         X8051Output.output=X8051Output.output.replace(/\n$/g,'');
-                    }else if(X8051Output.start){
+                    }else if(X8051Output.start&&(/^ +[0-9]+   /.test(s))){
                         X8051Output.output+=`${s}\n`;
                     }
                 }
