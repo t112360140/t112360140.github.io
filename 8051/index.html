@@ -306,6 +306,16 @@ TABLE:	DB	01111110B
                 }
             }
 
+            function getFileTree(callback){
+                if(dosCi){
+                    dosCi.fsTree().then((r)=>{
+                        if(callback){
+                            callback(r);
+                        }
+                    });
+                }
+            }
+
             window.addEventListener('keydown', function(event){
                 if(document.activeElement.tagName='TEXTAREA'){
                     if (event.key=='Tab'){
