@@ -73,7 +73,6 @@ TABLE:	DB	01111110B
                                 <button style="width:100%;" onclick="
                                 const text=document.getElementById('asm').value;
                                     if(text!=''&&dosCi){
-                                        DOS.setPaused=false;
                                         const code=new TextEncoder().encode(text);
                                         dosCi.fsWriteFile('./code.asm',code);
                                         sendKey([
