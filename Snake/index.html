@@ -6,7 +6,11 @@
         <script src="js/auto_play.js"></script>
     </head>
     <body style="user-select: none;">
-        <span style="white-space:nowarp;">Use WebRTC as UART:<input type="checkbox" onchange="use_webrtc=this.checked;"></span><br>
+        <span style="white-space:nowarp;">UART through:<select onchange="UART_type=Number(this.options[this.selectedIndex].value);">
+            <option value="0">UART</option>
+            <option value="1">WebRTC</option>
+            <option value="2">Piping</option>
+        </select></span><br>
         <span style="white-space:nowarp;">Auto Play:<input type="checkbox" onchange="AUTO_PLAY=this.checked;"></span>
         <div style="height:95%;width:100%;position:relative;">
             <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);">
@@ -59,6 +63,10 @@
             </div>
         </div>
         <div id="webrtc_set" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#a0a0a0;height:50%;width:50%;border:solid;display:none;">
+            <div style="height:20px;width:20px;background:#ff0000;position:absolute;top:3px;right:3px;cursor:pointer;" onclick="
+                    step=98;
+                    this.parentElement.style.display='none';
+                "></div>
             <table style="margin:4%;height:92%;width:92%;" border="1">
                 <tr style="height:48%;">
                     <td style="width:80px;">Offer:</td>
@@ -111,6 +119,38 @@
                                 temp_data['webrtc_step']=2;
                             });
                         ">Create Offer</button>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div id="piping-set" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#a0a0a0;height:50%;width:50%;border:solid;display:none;">
+            <div style="height:20px;width:20px;background:#ff0000;position:absolute;top:3px;right:3px;cursor:pointer;" onclick="
+                    step=98;
+                    temp_data['piping_step']=0;
+                    this.parentElement.style.display='none';
+                "></div>
+            <table style="margin:4%;height:92%;width:92%;" border="1">
+                <tr style="height:48%;">
+                    <td style="width:80px;">Send:</td>
+                    <td><input id="piping-send-path" style="width:100%;"></td>
+                </tr>
+                <tr style="height:48%;">
+                    <td>Get:</td>
+                    <td><input id="piping-get-path" style="width:100%;"></td>
+                </tr>
+                <tr style="height:4%;">
+                    <td style="white-space:nowarp;" colspan="2">
+                        <button style="width:100%;" onclick="
+                            const send=document.getElementById('piping-send-path').value.replaceAll(' ','');
+                            const get=document.getElementById('piping-get-path').value.replaceAll(' ','');
+                            if(send==''){
+                                alert('Send cant be empty!');
+                            }else if(get==''){
+                                alert('Get cant be empty!');
+                            }else{
+                                pipingPath={'send':send,'get':get};
+                            }
+                            ">Done</button>
                     </td>
                 </tr>
             </table>

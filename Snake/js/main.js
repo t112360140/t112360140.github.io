@@ -3,6 +3,8 @@
 /// <reference path="simplepeer.min.js" />
 /// <reference path="auto_play.js" />
 
+const pipingUrl='https://ppng.io/';
+
 var pause=false;
 
 var map=[];
@@ -16,7 +18,12 @@ var clock=[0,0,0,0,0];
 
 var game_base_delay=150;
 
-var use_webrtc=false;
+var UART_type=0;
+
+var pipingPath={
+        'send':'',
+        'get':'',
+    };
 
 window.addEventListener('keydown',(e)=>{
     if(e.code==='KeyZ'){
@@ -518,7 +525,7 @@ async function main_loop(){
                     break;
                 }
                 case 0:{
-                    if(use_webrtc){
+                    if(UART_type===1){
                         if(!temp_data['webrtc_step']){
                             temp_data['webrtc_close']=false;
                             LCD_RESET();
@@ -559,6 +566,41 @@ async function main_loop(){
                             UART_port['port'].on('data',(data)=>{RX_buffer.push(Number(data))});
                             document.getElementById('webrtc_set').style.display='none';
                             temp_data['webrtc_step']=12;
+                        }
+                    }else if(UART_type===2){
+                        if(!temp_data['piping_step']){
+                            LCD_RESET();
+                            LCD_PRINTTURESTRING(0,0,'Try to Connect');
+                            pipingPath={'send':'','get':''};
+                            document.getElementById('piping-send-path').value='';
+                            document.getElementById('piping-get-path').value='';
+                            document.getElementById('piping-set').style.display='';
+                            temp_data['piping_step']=1;
+                            temp_data['piping_send_index']=0;
+                            temp_data['piping_get_index']=0;
+                        }else if(temp_data['piping_step']==1){
+                            if(pipingPath.sedn!=''&&pipingPath.get!=''){
+                                temp_data['piping_step']=0;
+                                step=1;
+                                RX_buffer=[];
+                                clock[0]=0;
+                                clock[2]=0;
+                                UART_port['write']=(data)=>{try{
+                                    if(pipingPath.send!=''&&pipingPath.get!=''){
+                                        fetch(`${pipingUrl}${pipingPath.send}to${pipingPath.get}/`,{
+                                            method:'POST',
+                                            body:data.toString()
+                                        }).catch((error)=>{
+                                            console.log(`Fetch Send Error: ${error}`);
+                                            pipingPath.send='';
+                                        });
+                                    }
+                                }catch(error){}};
+
+                                document.getElementById('piping-set').style.display='none';
+                            }
+                        }else{
+                            temp_data['piping_step']=0;
                         }
                     }else{
                         LCD_RESET();
@@ -1000,7 +1042,7 @@ async function main_loop(){
                     break;
                 }
                 case 90:{
-                    if(use_webrtc){
+                    if(UART_type===1){
                         // UART_port.on('close',()=>{});
                         step=99;
                     }else{
@@ -1069,7 +1111,7 @@ setInterval(()=>{
 readData();
 async function readData(){
     async function readLoop() {
-        if(!use_webrtc&&UART_port['port']&&UART_port['reader']){
+        if(UART_type===0&&UART_port['port']&&UART_port['reader']){
             try{
                 const {value,done }=await UART_port['reader'].read();
                 if(done){
