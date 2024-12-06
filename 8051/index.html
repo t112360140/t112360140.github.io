@@ -26,7 +26,30 @@
                                     this.value=this.value.substring(0,start)+'\t'+this.value.substring(end);
                                     this.selectionStart =this.selectionEnd=start+1;
                                 }
-                                " wrap="off">
+                                " wrap="off"
+                                ondragover="event.preventDefault();this.style.background='#a0a0a0';"
+                                ondragleave="this.style.background='#ffffff';"
+                                ondragend="this.style.background='#ffffff';"
+                                ondrop="
+                                    event.preventDefault();
+                                    this.style.background='#ffffff';
+                                    const item=event.dataTransfer.items[0];
+                                    if(item&&item.webkitGetAsEntry){
+                                        const entry=item.webkitGetAsEntry();
+                                        if(entry.isFile){
+                                            entry.file((file)=>{
+                                                if(file){
+                                                    const reader=new FileReader();
+                                                    reader.onload=()=>{
+                                                        document.getElementById('asm').value=reader.result;
+                                                    }
+                                                    reader.readAsText(file);
+                                                }
+                                            });
+                                        }
+                                    }
+                                "
+                                >
         ORG	00H
         JMP	START
 
@@ -242,13 +265,32 @@ TABLE:	DB	01111110B
                 <textarea id="X8051-log" style="height:50%;width:50%;margin:10px 0 10px 0;float:left;resize:none;" wrap="off" readonly></textarea>
                 <div style="height:50%;width:50%;margin:10px 0 30px 0;float:right;">
                     <textarea id="file-viewer" style="height:100%;width:100%;resize:none;" wrap="off"></textarea>
-                    <button style="float:right;" onclick="
+                    <button id="file-viewer-save" style="float:right;" onclick="
                         if(viewPath){
                             const text=new TextEncoder().encode(document.getElementById('file-viewer').value);
                             dosCi.fsWriteFile(viewPath,text)
                                 .then(()=>{sendKey([82,69,83,67,65,78,257]);});
                         }
                     ">Save</button>
+                    <button style="float:right;" onclick="
+                        document.getElementById('file-viewer-save').disabled=true;
+                        const log=document.getElementById('file-viewer');
+                        const logHex=new TextEncoder().encode(log.value);
+                        let hexStr='';
+                        for(let i=0;i<logHex.length;i+=16){
+                            let hexLine=`${i.toString(16).padStart(8,'0')} |`;
+                            for(let j=0;j<16;j++){
+                                if(i+j<logHex.length){
+                                    hexLine+=` ${logHex[i+j].toString(16).padStart(2,'0')}`;
+                                }else{
+                                    hexLine+=' 00';
+                                }
+                            }
+                            hexStr+=hexLine+'\n';
+                        }
+                        log.value=hexStr;
+                        
+                    ">to HEX</button>
                 </div>
             </div>
         </div>
@@ -635,6 +677,7 @@ TABLE:	DB	01111110B
                         .then((data)=>{
                             viewPath=path;
                             document.getElementById('file-viewer').value=new TextDecoder().decode(data);
+                            document.getElementById('file-viewer-save').disabled=false;
                         })
                         .catch((error)=>{});
                 }
