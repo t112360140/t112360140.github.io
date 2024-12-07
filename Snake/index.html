@@ -103,7 +103,7 @@
                             });
                             const answer=this.value.split('|');
                             for(let i=0;i<answer.length;i++){
-                                if(offer[i]!=''){
+                                if(answer[i]!=''){
                                     UART_port['port'].signal(JSON.parse(atob(answer[i])));
                                 }
                             }
