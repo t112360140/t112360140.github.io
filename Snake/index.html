@@ -185,7 +185,7 @@
                             UART_port['port'].on('signal',(data)=>{
                                 document.getElementById('webrtc_offer').value+=`${btoa(JSON.stringify(data))}|`;
                                 if(temp_data['webrtc_step']!=2){
-                                    setTime(()=>{
+                                    setTimeout(()=>{
                                         document.getElementById('piping-set-done').click();
                                     },100);
                                 }
