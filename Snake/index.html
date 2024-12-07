@@ -101,7 +101,7 @@
                             const piping_get_path=document.getElementById('piping-get-path').value;
                             if(piping_get_path!=''&&piping_send_path!=''&&piping_send_path!=piping_get_path){
                                 if(temp_data['webrtc_step']==1){
-                                    fetch(`${pipingUrl}${piping_get_path}2${piping_send_path}`)
+                                    fetch(`${pipingUrl}${piping_send_path}2${piping_get_path}`)
                                         .then((r)=>{return r.text()}).then((data)=>{
                                             document.getElementById('webrtc_offer').value=data;
                                             temp_data['webrtc_step']=3;
@@ -123,11 +123,11 @@
                                                 }
                                             }
                                             setTimeout(()=>{
-                                                fetch(`${pipingUrl}${piping_send_path}2${piping_get_path}`,{
+                                                fetch(`${pipingUrl}${piping_get_path}2${piping_send_path}`,{
                                                     method:'POST',
                                                     body:document.getElementById('webrtc_answer').value
                                                 });
-                                            },500);
+                                            },100);
                                         });
                                 }else if(temp_data['webrtc_step']==2){
                                     fetch(`${pipingUrl}${piping_send_path}2${piping_get_path}`,{
