@@ -186,7 +186,9 @@
                                 document.getElementById('webrtc_offer').value+=`${btoa(JSON.stringify(data))}|`;
                                 temp_data['webrtc_step']=2;
                             });
-                            document.getElementById('piping-set-done').click();
+                            setTime(()=>{
+                                document.getElementById('piping-set-done').click();
+                            },100);
                         ">Create Offer</button>
                     </td>
                 </tr>
