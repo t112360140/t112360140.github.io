@@ -9,7 +9,6 @@
         <span style="white-space:nowarp;">UART through:<select onchange="UART_type=Number(this.options[this.selectedIndex].value);">
             <option value="0">UART</option>
             <option value="1">WebRTC</option>
-<!--             <option value="2">Piping</option> -->
         </select></span><br>
         <span style="white-space:nowarp;">Auto Play:<input type="checkbox" onchange="AUTO_PLAY=this.checked;"></span>
         <div style="height:95%;width:100%;position:relative;">
@@ -92,6 +91,68 @@
                             }
                         }
                     "></textarea></td>
+                    <td rowspan="2">
+                        Send:<br>
+                        <input id="piping-send-path"><br><br>
+                        Get:<br>
+                        <input id="piping-get-path"><br><br>
+                        <button onclick="
+                            const piping_send_path=document.getElementById('piping-send-path').value;
+                            const piping_get_path=document.getElementById('piping-get-path').value;
+                            if(piping_get_path!=''&&piping_send_path!=''&&piping_send_path!=piping_get_path){
+                                if(temp_data['webrtc_step']==1){
+                                    fetch(`${pipingUrl}${piping_get_path}2${piping_send_path}`)
+                                        .then((data)=>{
+                                            document.getElementById('webrtc_offer').value=data;
+                                            temp_data['webrtc_step']=3;
+                                            UART_port['port']=new SimplePeer();
+                                            UART_port['port'].on('error',(err)=>{
+                                                console.log(err);
+                                            });
+                                            document.getElementById('webrtc_answer').value='';
+                                            UART_port['port'].on('signal',(data)=>{
+                                                document.getElementById('webrtc_answer').value+=`${btoa(JSON.stringify(data))}|`;
+                                            });
+                                            UART_port['port'].on('connect',()=>{
+                                                temp_data['webrtc_step']=10;
+                                            });
+                                            const offer=data.split('|');
+                                            for(let i=0;i<offer.length;i++){
+                                                if(offer[i]!=''){
+                                                    UART_port['port'].signal(JSON.parse(atob(offer[i])));
+                                                }
+                                            }
+                                            setTimeout(()=>{
+                                                fetch(`${pipingUrl}${piping_send_path}2${piping_get_path}`,{
+                                                    method:'POST',
+                                                    body:document.getElementById('webrtc_answer').value
+                                                });
+                                            },1000);
+                                        });
+                                }else if(temp_data['webrtc_step']==2){
+                                    fetch(`${pipingUrl}${piping_send_path}2${piping_get_path}`,{
+                                        method:'POST',
+                                        body:document.getElementById('webrtc_offer').value
+                                    }).then((data)=>{
+                                        fetch(`${pipingUrl}${piping_get_path}2${piping_send_path}`)
+                                            .then((data)=>{
+                                                document.getElementById('webrtc_answer').value=data;
+                                                temp_data['webrtc_step']=3;
+                                                UART_port['port'].on('connect',()=>{
+                                                    temp_data['webrtc_step']=10;
+                                                });
+                                                const answer=data.split('|');
+                                                for(let i=0;i<answer.length;i++){
+                                                    if(answer[i]!=''){
+                                                        UART_port['port'].signal(JSON.parse(atob(answer[i])));
+                                                    }
+                                                }
+                                            });
+                                    });
+                                }
+                            }
+                        ">Done</button>
+                    </td>
                 </tr>
                 <tr style="height:48%;">
                     <td>Answer:</td>
@@ -126,38 +187,6 @@
                                 temp_data['webrtc_step']=2;
                             });
                         ">Create Offer</button>
-                    </td>
-                </tr>
-            </table>
-        </div>
-        <div id="piping-set" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#a0a0a0;height:50%;width:50%;border:solid;display:none;">
-            <div style="height:20px;width:20px;background:#ff0000;position:absolute;top:3px;right:3px;cursor:pointer;" onclick="
-                    step=98;
-                    temp_data['piping_step']=0;
-                    this.parentElement.style.display='none';
-                "></div>
-            <table style="margin:4%;height:92%;width:92%;" border="1">
-                <tr style="height:48%;">
-                    <td style="width:80px;">Send:</td>
-                    <td><input id="piping-send-path" style="width:100%;"></td>
-                </tr>
-                <tr style="height:48%;">
-                    <td>Get:</td>
-                    <td><input id="piping-get-path" style="width:100%;"></td>
-                </tr>
-                <tr style="height:4%;">
-                    <td style="white-space:nowarp;" colspan="2">
-                        <button style="width:100%;" onclick="
-                            const send=document.getElementById('piping-send-path').value.replaceAll(' ','');
-                            const get=document.getElementById('piping-get-path').value.replaceAll(' ','');
-                            if(send==''){
-                                alert('Send cant be empty!');
-                            }else if(get==''){
-                                alert('Get cant be empty!');
-                            }else{
-                                pipingPath={'send':send,'get':get};
-                            }
-                            ">Done</button>
                     </td>
                 </tr>
             </table>
