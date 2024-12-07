@@ -127,7 +127,7 @@
                                                     method:'POST',
                                                     body:document.getElementById('webrtc_answer').value
                                                 });
-                                            },1000);
+                                            },500);
                                         });
                                 }else if(temp_data['webrtc_step']==2){
                                     fetch(`${pipingUrl}${piping_send_path}2${piping_get_path}`,{
