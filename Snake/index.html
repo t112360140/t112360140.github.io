@@ -79,14 +79,17 @@
                             });
                             document.getElementById('webrtc_answer').value='';
                             UART_port['port'].on('signal',(data)=>{
-                                if(document.getElementById('webrtc_answer').value==''){
-                                    document.getElementById('webrtc_answer').value=JSON.stringify(data);
-                                }
+                                document.getElementById('webrtc_answer').value+=`${btoa(JSON.stringify(data))}|`;
                             });
                             UART_port['port'].on('connect',()=>{
                                 temp_data['webrtc_step']=10;
                             });
-                            UART_port['port'].signal(JSON.parse(this.value));
+                            const offer=this.value.split('|');
+                            for(let i=0;i<offer.length;i++){
+                                if(offer[i]!=''){
+                                    UART_port['port'].signal(JSON.parse(atob(offer[i])));
+                                }
+                            }
                         }
                     "></textarea></td>
                 </tr>
@@ -98,7 +101,12 @@
                             UART_port['port'].on('connect',()=>{
                                 temp_data['webrtc_step']=10;
                             });
-                            UART_port['port'].signal(JSON.parse(this.value));
+                            const answer=this.value.split('|');
+                            for(let i=0;i<answer.length;i++){
+                                if(offer[i]!=''){
+                                    UART_port['port'].signal(JSON.parse(atob(answer[i])));
+                                }
+                            }
                         }
                     "></textarea></td>
                 </tr>
@@ -112,10 +120,9 @@
                             UART_port['port'].on('error',(err)=>{
                                 console.log(err);
                             });
+                            document.getElementById('webrtc_offer').value='';
                             UART_port['port'].on('signal',(data)=>{
-                                if(document.getElementById('webrtc_offer').value==''){
-                                    document.getElementById('webrtc_offer').value=JSON.stringify(data);
-                                }
+                                document.getElementById('webrtc_offer').value+=`${btoa(JSON.stringify(data))}|`;
                                 temp_data['webrtc_step']=2;
                             });
                         ">Create Offer</button>
