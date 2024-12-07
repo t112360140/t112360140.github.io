@@ -133,7 +133,7 @@
                                     fetch(`${pipingUrl}${piping_send_path}2${piping_get_path}`,{
                                         method:'POST',
                                         body:document.getElementById('webrtc_offer').value
-                                    }).then(()=>{rep
+                                    }).then(()=>{
                                         fetch(`${pipingUrl}${piping_get_path}2${piping_send_path}`)
                                             .then((r)=>{return r.text()}).then((data)=>{
                                                 document.getElementById('webrtc_answer').value=data;
