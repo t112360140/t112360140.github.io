@@ -578,7 +578,7 @@ TABLE:	DB	01111110B
                                     morOutput+=`<tr><td>${fileTree(list.nodes[i],`${fullPath}${list.name}/`)}</tr></td>`;
                                 }
                                 morOutput=btoa(morOutput);
-                                output+=`<tr><td><span style="cursor:pointer;" onclick="
+                                output+=`<tr><td><span style="cursor:pointer;" title="show more file" onclick="
                                         this.parentElement.parentElement.outerHTML=atob('${morOutput}');
                                     ">...</span></tr></td>`;
                             }
