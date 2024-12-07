@@ -92,11 +92,11 @@
                         }
                     "></textarea></td>
                     <td rowspan="2" style="width:100px;">
-                        Send:<br>
+                        Offer:<br>
                         <input id="piping-send-path" style="width:100px;"><br><br>
-                        Get:<br>
+                        Answer:<br>
                         <input id="piping-get-path" style="width:100px;"><br><br>
-                        <button onclick="
+                        <button id="piping-set-done" title="if you are answer, click it first. else dont click it!" onclick="
                             const piping_send_path=document.getElementById('piping-send-path').value;
                             const piping_get_path=document.getElementById('piping-get-path').value;
                             if(piping_get_path!=''&&piping_send_path!=''&&piping_send_path!=piping_get_path){
@@ -186,6 +186,7 @@
                                 document.getElementById('webrtc_offer').value+=`${btoa(JSON.stringify(data))}|`;
                                 temp_data['webrtc_step']=2;
                             });
+                            document.getElementById('piping-set-done').click();
                         ">Create Offer</button>
                     </td>
                 </tr>
