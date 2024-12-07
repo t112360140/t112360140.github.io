@@ -18,7 +18,7 @@
                     <table style="height:100%;width:100%;">
                         <tr>
                             <td>
-                                <textarea id="asm" style="height:100%;width:100%;resize:none;margin-top:20px;" onkeydown="
+                                <textarea id="asm" style="height:100%;width:100%;resize:none;margin-top:20px;" spellcheck="false" onkeydown="
                                 if (e.key == 'Tab') {
                                     e.preventDefault();
                                     var start = this.selectionStart;
@@ -262,9 +262,9 @@ TABLE:	DB	01111110B
                 }
             ">OTHER</button>
             <div id="log" style="width:100%;display:none;">
-                <textarea id="X8051-log" style="height:50%;width:50%;margin:10px 0 10px 0;float:left;resize:none;" wrap="off" readonly></textarea>
+                <textarea id="X8051-log" style="height:50%;width:50%;margin:10px 0 10px 0;float:left;resize:none;" wrap="off" spellcheck="false" readonly></textarea>
                 <div style="height:50%;width:50%;margin:10px 0 30px 0;float:right;">
-                    <textarea id="file-viewer" style="height:100%;width:100%;resize:none;" wrap="off"></textarea>
+                    <textarea id="file-viewer" style="height:100%;width:100%;resize:none;" spellcheck="false" wrap="off"></textarea>
                     <button id="file-viewer-save" style="float:right;" onclick="
                         if(viewPath){
                             const text=new TextEncoder().encode(document.getElementById('file-viewer').value);
