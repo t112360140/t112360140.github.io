@@ -57,7 +57,7 @@ START:	MOV	SP,#30H
         MOV	IE,#00H
         MOV	PSW,#00H
         MOV	DPTR,#TABLE
-        MOV	P0,#00H
+        MOV	R0,#00H
 
 NEXT:	MOV	A,R0
         MOVC	A,@A+DPTR
