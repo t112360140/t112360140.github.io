@@ -763,6 +763,7 @@ TABLE:	DB	01111110B
             }
 
             function download(){
+                setProgress(0,100);
                 UART_send(80);//P
                 UART_send(Math.floor(file.length/256));
                 UART_send(file.length%256);
