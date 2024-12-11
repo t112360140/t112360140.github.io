@@ -109,9 +109,7 @@ TABLE:	DB	01111110B
                                             // ,3401,46,3400,              //>
                                             // 88,56,48,53,49,76,79,71,46,84,88,84,  //X8051_LOG.TXT,
                                             257,
-                                        ],()=>{
-
-                                        });
+                                        ]);
                                     }
                                 ">&gt;</button><br><br>
                                 <button id="linkBT" style="width:100%;" onclick="
@@ -124,6 +122,7 @@ TABLE:	DB	01111110B
                                 <button style="width:100%;" onclick="
                                     DOS=newX8051DOS();
                                 ">Reset</button>
+                                Auto Link:<input type="checkbox" id="auto-link">
                             </td>
                         </tr>
                     </table>
@@ -300,7 +299,6 @@ TABLE:	DB	01111110B
             var file;
 
             let dosCi,dosInputEnable=false;
-            let autoLink=true;
             let X8051Output={
                     log:true,
                     start:false,
@@ -312,10 +310,10 @@ TABLE:	DB	01111110B
 
             function newX8051DOS(){
                 changeDOS(document.getElementById("dos"),'./jsdos/X8051.jsdos',(s)=>{
-                    if(s.includes('Assembly Errors :  0')){
+                    if(s.includes('Assembly Errors :  0')&&document.getElementById('auto-link').checked){
                         document.getElementById('linkBT').click();
                     }
-                    if(autoLink&&s.includes('Link Errors :  0')){
+                    if(s.includes('Link Errors :  0')){
                         dosCi.fsReadFile('./CODE.TSK')
                             .then((data)=>{
                                 file=data;
