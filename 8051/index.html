@@ -48,6 +48,8 @@
                                             });
                                         }
                                     }
+                                " onchange="
+                                    localStorage.setItem('lastCode',this.value);
                                 "
                                 >
         ORG	00H
@@ -298,6 +300,13 @@ TABLE:	DB	01111110B
             let UART,UART_writer,UART_reader;
             let RX_buffer=[];
             var file;
+
+            window.onload=()=>{
+                const lastCode=localStorage.getItem('lastCode');;
+                if(lastCode){
+                    document.getElementById('asm').value=lastCode;
+                }
+            }
 
             let dosCi,dosInputEnable=false;
             let X8051Output={
