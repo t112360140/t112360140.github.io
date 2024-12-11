@@ -122,7 +122,8 @@ TABLE:	DB	01111110B
                                 <button style="width:100%;" onclick="
                                     DOS=newX8051DOS();
                                 ">Reset</button><br><br>
-                                Auto Link:<br><input type="checkbox" id="auto-link" checked>
+                                Auto Link:<br><input type="checkbox" id="auto-link" checked><br><br>
+                                Auto Download:<br><input type="checkbox" id="auto-download" checked>
                             </td>
                         </tr>
                     </table>
@@ -223,7 +224,7 @@ TABLE:	DB	01111110B
                         <progress id="progress" min="0" value="0" style="width:100%;">0%</progress>
                     </td>
                     <td>
-                        <button onclick="
+                        <button id="download-to-board" onclick="
                             if(!file){
                                 alert('Not file!');
                             }else if(!UART){
@@ -317,6 +318,9 @@ TABLE:	DB	01111110B
                         dosCi.fsReadFile('./CODE.TSK')
                             .then((data)=>{
                                 file=data;
+                                if(document.getElementById('auto-download').checked){
+                                    document.getElementById('download-to-board').click();
+                                }
                             });
                     }
                     if(X8051Output.log){
