@@ -723,22 +723,25 @@ TABLE:	DB	01111110B
             }, true);
 
             async function connect_UART(){
-                UART=null;
-                UART_writer=null;
-                UART_reader=null;
-                try{
-                    UART=await navigator.serial.requestPort();
-                    await UART.open({
-                        baudRate:4800,
-                        dataBits:8,
-                        parity:'none',
-                        stopBits:1
-                    });
-                    UART_writer=UART.writable.getWriter();
-                    UART_reader=UART.readable.getReader();
-                }catch(error){
-                    console.log('Error: '+error);
-                }
+                    try{
+                        if(!UART){
+                            UART=await navigator.serial.requestPort();
+                            await UART.open({
+                                baudRate:4800,
+                                dataBits:8,
+                                parity:'none',
+                                stopBits:1
+                            });
+                        }
+                        if(UART&&UART.writable&&!UART_writer){
+                            UART_writer=UART.writable.getWriter();
+                        }
+                        if(UART&&UART.readable&&!UART_reader){
+                            UART_reader=UART.readable.getReader();
+                        }
+                    }catch(error){
+                        console.log('Error: '+error);
+                    }
             }
 
             function UART_send(data){
