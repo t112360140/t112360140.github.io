@@ -567,41 +567,6 @@ async function main_loop(){
                             document.getElementById('webrtc_set').style.display='none';
                             temp_data['webrtc_step']=12;
                         }
-                    }else if(UART_type===2){
-                        if(!temp_data['piping_step']){
-                            LCD_RESET();
-                            LCD_PRINTTURESTRING(0,0,'Try to Connect');
-                            pipingPath={'send':'','get':''};
-                            document.getElementById('piping-send-path').value='';
-                            document.getElementById('piping-get-path').value='';
-                            document.getElementById('piping-set').style.display='';
-                            temp_data['piping_step']=1;
-                            temp_data['piping_send_index']=0;
-                            temp_data['piping_get_index']=0;
-                        }else if(temp_data['piping_step']==1){
-                            if(pipingPath.sedn!=''&&pipingPath.get!=''){
-                                temp_data['piping_step']=0;
-                                step=1;
-                                RX_buffer=[];
-                                clock[0]=0;
-                                clock[2]=0;
-                                UART_port['write']=(data)=>{try{
-                                    if(pipingPath.send!=''&&pipingPath.get!=''){
-                                        fetch(`${pipingUrl}${pipingPath.send}to${pipingPath.get}/`,{
-                                            method:'POST',
-                                            body:data.toString()
-                                        }).catch((error)=>{
-                                            console.log(`Fetch Send Error: ${error}`);
-                                            pipingPath.send='';
-                                        });
-                                    }
-                                }catch(error){}};
-
-                                document.getElementById('piping-set').style.display='none';
-                            }
-                        }else{
-                            temp_data['piping_step']=0;
-                        }
                     }else{
                         LCD_RESET();
                         clock[0]=0;

@@ -1,0 +1,441 @@
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>UART proxy</title>
+    </head>
+    <body>
+        <table border="0" style="height:100%;width:100%;">
+            <tr style="height:auto;">
+                <td><textarea id="UART1-Log" style="height:100%;width:100%;resize:none;" wrap="off" readonly></textarea></td>
+                <td><textarea id="UART-data-display1" style="height:100%;width:100%;resize:none;" wrap="off" readonly></textarea></td>
+                <td><textarea id="UART2-Log" style="height:100%;width:100%;resize:none;" wrap="off" readonly></textarea></td>
+            </tr>
+            <tr style="height:100px;">
+                <td>
+                    <table style="margin-left:auto;">
+                        <tr>
+                            <td>
+                                <svg style="width:25px;height:25px;" viewBox="0 0 10 10">
+                                    <path class="uart1-right-arrow" d="M 0 8 L 9 8 l -5 -5" stroke="black" fill="transparent" stroke-width="2"/>
+                                </svg><br>
+                                <svg style="width:25px;height:25px;" viewBox="0 0 10 10">
+                                    <path class="uart1-left-arrow" d="M 10 2 L 1 2 l 5 5" stroke="black" fill="transparent" stroke-width="2"/>
+                                </svg>
+                            </td>
+                            <td>
+                                <div style="white-space:nowrap;"><input style="width:110px;"><button onclick="
+                                    {
+                                        let str=this.parentElement.getElementsByTagName('input')[0].value;
+                                        if(str!=''){
+                                            if(/^#/g.test(str)){
+                                                if(!isNaN(Number(str.replace(/^#/g,'')))){
+                                                    str=Number(str.replace(/^#/g,''));
+                                                }
+                                            }
+                                            UARTList[0].write(str);
+                                        }
+                                    }
+                                " style="width:50px;">send</button></div>
+                            </td>
+                            <td>
+                                <table border="1">
+                                    <tr>
+                                        <th colspan="100">UART 1</th>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <button onclick="UARTList[0].connect();">&nbsp;&nbsp;connect&nbsp;</button>
+                                        </td>
+                                        <td>
+                                            <button onclick="UARTList[0].disconnect();">disconnect</button>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                            <td>
+                                <div style="white-space:nowrap;"><input style="width:110px;"><button onclick="
+                                    {
+                                        let str=this.parentElement.getElementsByTagName('input')[0].value;
+                                        if(str!=''){
+                                            if(/^#/g.test(str)){
+                                                if(!isNaN(Number(str.replace(/^#/g,'')))){
+                                                    str=Number(str.replace(/^#/g,''));
+                                                }
+                                            }
+                                            UARTList[1].soft(str);
+                                        }
+                                    }
+                                " style="width:50px;">send</button></div>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td align="center" style="white-space:nowrap;min-width:30px;">
+                    <div style="cursor:pointer;" onclick="UARTList[1].sofeEnable=!UARTList[1].sofeEnable;setArrowColor('right-arrow',UARTList[1].sofeEnable?'#000000':'#a0a0a0');">
+                        <svg style="width:70%;height:25px;" viewBox="0 0 10 10" preserveAspectRatio="none">
+                            <path class="right-arrow" d="M -1 8 L 11 8" stroke="black" fill="transparent" stroke-width="2"/>
+                        </svg><svg style="width:25px;height:25px;" viewBox="0 0 10 10">
+                            <path class="right-arrow" d="M 0 8 L 9 8 l -5 -5" stroke="black" fill="transparent" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    <div style="cursor:pointer;" onclick="UARTList[0].sofeEnable=!UARTList[0].sofeEnable;setArrowColor('left-arrow',UARTList[0].sofeEnable?'#000000':'#a0a0a0');">
+                        <svg style="width:25px;height:25px;" viewBox="0 0 10 10">
+                            <path class="left-arrow" d="M 10 2 L 1 2 l 5 5" stroke="black" fill="transparent" stroke-width="2"/>
+                        </svg><svg style="width:70%;height:25px;" viewBox="0 0 10 10" preserveAspectRatio="none">
+                            <path class="left-arrow" d="M -1 2 L 11 2" stroke="black" fill="transparent" stroke-width="2"/>
+                        </svg>
+                    </div>
+                </td>
+                <td>
+                    <table style="margin-right:auto;">
+                        <tr>
+                            <td>
+                                <div style="white-space:nowrap;"><input style="width:110px;"><button onclick="
+                                    {
+                                        let str=this.parentElement.getElementsByTagName('input')[0].value;
+                                        if(str!=''){
+                                            if(/^#/g.test(str)){
+                                                if(!isNaN(Number(str.replace(/^#/g,'')))){
+                                                    str=Number(str.replace(/^#/g,''));
+                                                }
+                                            }
+                                            UARTList[0].soft(str);
+                                        }
+                                    }
+                                " style="width:50px;">send</button></div>
+                            </td>
+                            <td>
+                                <table border="1">
+                                    <tr>
+                                        <th colspan="100">UART 2</th>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <button onclick="UARTList[1].connect();">&nbsp;&nbsp;connect&nbsp;</button>
+                                        </td>
+                                        <td>
+                                            <button onclick="UARTList[1].disconnect();">disconnect</button>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                            <td>
+                                <div style="white-space:nowrap;"><input style="width:110px;"><button onclick="
+                                    {
+                                        let str=this.parentElement.getElementsByTagName('input')[0].value;
+                                        if(str!=''){
+                                            if(/^#/g.test(str)){
+                                                if(!isNaN(Number(str.replace(/^#/g,'')))){
+                                                    str=Number(str.replace(/^#/g,''));
+                                                }
+                                            }
+                                            UARTList[1].write(str);
+                                        }
+                                    }
+                                " style="width:50px;">send</button></div>
+                            </td>
+                            <td>
+                                <svg style="width:25px;height:25px;" viewBox="0 0 10 10">
+                                    <path class="uart2-right-arrow" d="M 0 8 L 9 8 l -5 -5" stroke="black" fill="transparent" stroke-width="2"/>
+                                </svg><br>
+                                <svg style="width:25px;height:25px;" viewBox="0 0 10 10">
+                                    <path class="uart2-left-arrow" d="M 10 2 L 1 2 l 5 5" stroke="black" fill="transparent" stroke-width="2"/>
+                                </svg>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr style="height:auto;">
+                <td>
+                    <textarea id="UART1-code" style="height:50%;width:100%;resize:none;" wrap="off" placeholder="When get data from UART 1 do" onchange="
+                        if(UARTList[0]){
+                            UARTList[0].setCode(this.value.replaceAll('sendToUART','UARTList[0].write').replaceAll('sendToSoft','UARTList[1].soft'));
+                        }    
+                    ">//What should do when data from UART1 on real port&#10;function(data){&#10;&#09;LOG(`UART get: ${data}`);&#10;&#09;sendToSoft(data);&#10;}</textarea>
+                    <textarea id="UART1-code" style="height:50%;width:100%;resize:none;" wrap="off" placeholder="When get data from UART 2 (soft) do" onchange="
+                        if(UARTList[0]){
+                            UARTList[0].setSoft(this.value.replaceAll('sendToUART','UARTList[0].write').replaceAll('sendToSoft','UARTList[1].soft'));
+                        }    
+                    ">//What should do when data from UART2 on soft port&#10;function(data){&#10;&#09;LOG(`Send to UART: ${data}`);&#10;&#09;sendToUART(data);&#10;}</textarea>
+                </td>
+                <td><textarea id="UART-data-display2" style="height:100%;width:100%;resize:none;" wrap="off" readonly></textarea></td>
+                <td>
+                    <textarea id="UART2-code" style="height:50%;width:100%;resize:none;" wrap="off" placeholder="When get data from UART 2 do" onchange="
+                        if(UARTList[1]){
+                            UARTList[1].setCode(this.value.replaceAll('sendToUART','UARTList[1].write').replaceAll('sendToSoft','UARTList[0].soft'));
+                        }    
+                    ">//What should do when data from UART2 on real port&#10;function(data){&#10;&#09;LOG(`UART get: ${data}`);&#10;&#09;sendToSoft(data);&#10;}</textarea>
+                    <textarea id="UART2-code" style="height:50%;width:100%;resize:none;" wrap="off" placeholder="When get data from UART 1 (soft) do" onchange="
+                        if(UARTList[1]){
+                            UARTList[1].setSoft(this.value.replaceAll('sendToUART','UARTList[1].write').replaceAll('sendToSoft','UARTList[0].soft'));
+                        }    
+                    ">//What should do when data from UART1 on soft port&#10;function(data){&#10;&#09;LOG(`Send to UART: ${data}`);&#10;&#09;sendToUART(data);&#10;}</textarea>
+                </td>
+            </tr>
+        </table>
+        <script>
+            var UARTList;
+            window.onload=()=>{
+                UARTList=[NewUart({log:document.getElementById('UART1-Log')}),NewUart({log:document.getElementById('UART2-Log')})];
+                UARTList[1].on('soft',(data)=>{
+                    const textarea=document.getElementById('UART-data-display1');
+                    textarea.value+=`${getTimeString()}: ${data}  /  ${(new TextDecoder().decode(new Uint8Array(data))).replaceAll(/[\n\r\t\0]/g,'')} \n`;
+                    textarea.scrollTo(0,textarea.scrollHeight);
+                    flashArrow('right-arrow','#00ff00');
+                });
+                UARTList[0].on('soft',(data)=>{
+                    const textarea=document.getElementById('UART-data-display2');
+                    textarea.value+=`${getTimeString()}: ${data}  /  ${(new TextDecoder().decode(new Uint8Array(data))).replaceAll(/[\n\r\t\0]/g,'')} \n`;
+                    textarea.scrollTo(0,textarea.scrollHeight);
+                    flashArrow('left-arrow','#ff0000');
+                });
+
+                UARTList[0].on('read',()=>{
+                    flashArrow('uart1-right-arrow','#00ff00');
+                });
+                UARTList[0].on('write',()=>{
+                    flashArrow('uart1-left-arrow','#ff0000');
+                });
+                UARTList[1].on('read',()=>{
+                    flashArrow('uart2-left-arrow','#ff0000');
+                });
+                UARTList[1].on('write',()=>{
+                    flashArrow('uart2-right-arrow','#00ff00');
+                });
+
+                UARTList[0].setCode('function(data){LOG(data);UARTList[1].soft(data);}');
+                UARTList[1].setCode('function(data){LOG(data);UARTList[0].soft(data);}');
+            }
+
+            NewUart=(config={})=>{
+                return (
+                    {
+                        logElement:config.log,
+                        log:function(data){
+                                if(this.logElement){
+                                    this.logElement.value+=`${getTimeString()}: ${data}\n`;
+                                    this.logElement.scrollTo(0,this.logElement.scrollHeight);
+                                }
+                            },
+                        
+                        code:function(d){this.log(d);},
+                        setCode:function(code){
+                                code=code.replaceAll('LOG','this.log');
+                                try{
+                                    this.code=Function(`return(${code})`)();
+                                }catch(error){
+                                    alert(`ERROR\: ${error}`);
+                                }
+                            },
+
+                        sofeEnable:true,
+                        soft:function(data){
+                            if(this.sofeEnable){
+                                if(typeof data==='string'){
+                                    data=new TextEncoder().encode(data);
+                                }else if(typeof data==='number'){
+                                    data=[data];
+                                }
+                                this.onEvent.soft.forEach((action)=>{
+                                    action(data);
+                                });
+                                this.softOther(data);
+                            }
+                            },
+                        softOther:function(data){
+                                this.log(`Send to UART\: ${data}`);
+                                this.write(data);
+                            },
+                        setSoft:function(code){
+                                code=code.replaceAll('LOG','this.log');
+                                try{
+                                    this.softOther=Function(`return(${code})`)();
+                                }catch(error){
+                                    alert(`ERROR\: ${error}`);
+                                }
+                            },
+
+                        UART:null,
+                        writer:null,
+                        reader:null,
+                        connect:async function(config={baudRate:9600}){
+                                if(!this.UART){
+                                    try{
+                                        this.UART=await navigator.serial.requestPort();
+                                        await this.UART.open(config);
+                                        if(this.UART.writable&&!this.writer){
+                                            this.writer=this.UART.writable.getWriter();
+                                        }
+                                        if(this.UART.readable&&!this.reader){
+                                            this.reader=this.UART.readable.getReader();
+                                        }
+                                        this.write=function(data){
+                                            if(this.writer){
+                                                let sendData;
+                                                if(typeof data==='number'){
+                                                    sendData=(new Uint8Array([data]));
+                                                }else if(typeof data==='string'){
+                                                    sendData=(new TextEncoder().encode(data));
+                                                }else{
+                                                    sendData=(data);
+                                                }
+                                                this.onEvent.write.forEach((action)=>{
+                                                    action(sendData);
+                                                });
+                                                this.writer.write(sendData);
+                                                this.writer.releaseLock();
+                                            }
+                                        }
+                                        this.read=async function(){
+                                            if(this.reader&&this.read){
+                                                try{
+                                                    const {value,done}=await this.reader.read();
+                                                    if(done){
+                                                        this.reader.releaseLock();
+                                                        return;
+                                                    }
+                                                    if(value.length>0){
+                                                        this.onEvent.read.forEach((action)=>{
+                                                            action([...value]);
+                                                        });
+                                                        if(this.code){
+                                                            this.code([...value]);
+                                                        }
+                                                    }
+                                                    setTimeout(this.read(),0);
+                                                }catch(error){
+                                                    alert(`Error\: ${error}`);
+                                                }
+                                            }
+                                        }
+                                        this.read();
+                                    }catch(e){
+                                        alert(`ERROR\: ${e}`);
+                                    }
+                                }
+                            },
+                        disconnect:function(){
+                            if(this.UART){
+                                if(this.writer.locked){
+                                    this.writer.releaseLock();
+                                }
+                                if(this.reader.locked){
+                                    this.reader.releaseLock();
+                                }
+                                this.UART.forget();
+                                this.UART.close();
+                                this.UART=null;
+                                this.writer=null;
+                                this.reader=null;
+                            }
+                            this.write=function(data){
+                                this.onEvent.write.forEach((action)=>{
+                                    action(data);
+                                });
+                            }
+                            this.read=function(data){
+                                if(typeof data==='string'){
+                                    data=new TextEncoder().encode(data);
+                                }else if(typeof data==='number'){
+                                    data=[data];
+                                }
+                                this.onEvent.read.forEach((action)=>{
+                                    action([...data]);
+                                });
+                                if(this.code){
+                                    this.code([...data]);
+                                }
+                            }
+                        },
+                        write:function(data){
+                                let sendData;
+                                if(typeof data==='number'){
+                                    sendData=(new Uint8Array([data]));
+                                }else if(typeof data==='string'){
+                                    sendData=(new TextEncoder().encode(data));
+                                }else{
+                                    sendData=(data);
+                                }
+                                this.onEvent.write.forEach((action)=>{
+                                    action(sendData);
+                                });
+                                this.onEvent.write.forEach((action)=>{
+                                    action(sendData);
+                                });
+                            },
+                        read:function(data){
+                                if(typeof data==='string'){
+                                    data=new TextEncoder().encode(data);
+                                }else if(typeof data==='number'){
+                                    data=[data];
+                                }
+                                this.onEvent.read.forEach((action)=>{
+                                    action([...data]);
+                                });
+                                if(this.code){
+                                    this.code([...data]);
+                                }
+                            },
+                        
+                        onEvent:{
+                                read:[],
+                                write:[],
+                                soft:[],
+                            },
+                        on:function(event,action){
+                            if(action&&(typeof this.onEvent[event]==='object')){
+                                this.onEvent[event].push(action);
+                            }
+                        },
+                    }
+                );
+            }
+
+            function delay(time=0,action){
+                if(action){
+                    setTimeout(()=>{
+                        action();
+                    },time);
+                }
+            }
+
+            function getTimeString(){
+                const data=new Date();
+                return `${data.getHours().toString().padStart(2,'0')}:${data.getMinutes().toString().padStart(2,'0')}:${data.getSeconds().toString().padStart(2,'0')}-${data.getMilliseconds().toString().padStart(3,'0')}`;
+            }
+
+            function setArrowColor(arrow='right-arrow',color='#000000'){
+                const path=document.getElementsByClassName(arrow);
+                for(let i=0;i<path.length;i++){
+                    path[i].setAttribute('stroke',color);
+                }
+            }
+
+            function flashArrow(arrow='right-arrow',color='#00ff00',time=50){
+                setArrowColor(arrow,color);
+                setTimeout(()=>{
+                    setArrowColor(arrow,'#000000');
+                },time);
+            }
+
+            window.addEventListener('keydown',(event)=>{
+                if(document.activeElement.tagName=='TEXTAREA'){
+                    const textarea=document.activeElement;
+                    if (event.key=='Tab'){
+                        event.preventDefault();
+                        const start=textarea.selectionStart;
+                        const end=textarea.selectionEnd;
+                        textarea.value=textarea.value.substring(0,start)+'\t'+textarea.value.substring(end);
+                        textarea.selectionStart=textarea.selectionEnd=start+1;
+                    }
+                    if(event.key=='Delete'&&[...textarea.attributes].map((a)=>{return a.name}).includes('readonly')){
+                        event.preventDefault();
+                        textarea.value='';
+                    }
+                }
+            });
+        </script>
+    </body>
+</html>
