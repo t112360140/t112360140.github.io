@@ -601,10 +601,7 @@ async function main_loop(){
                 case 1:{
                     if(RX_buffer.length>0&&RX_buffer.shift()===112){
                         UART_port.write(112);
-                        LCD_PRINTTURESTRING(0,1,"Exchange Seed!");
-                        UART_port.write(115);
-                        clock[1]=0;
-                        step++;
+                        step=998;
                     }else if(clock[0]>=1000){
                         RX_buffer=[];
                         UART_port.write(112);
@@ -615,6 +612,15 @@ async function main_loop(){
                     }
                     if(clock[2]>=30000){
                         step=8;
+                    }
+                    break;
+                }
+                case 998:{
+                    if(clock[1]>=100){
+                        LCD_PRINTTURESTRING(0,1,"Exchange Seed!");
+                        UART_port.write(115);
+                        clock[1]=0;
+                        step=2;
                     }
                     break;
                 }
@@ -843,27 +849,30 @@ async function main_loop(){
                         clock[1]=0;
                     }
                     if(clock[0]>=(6-temp_data['game_hard'])*game_base_delay){
-                        if(!temp_data['wait']){
-                            temp_data['game_step']=(temp_data['game_step']+1)%100;
-                            UART_port.write(temp_data['game_step']);
+                        if(temp_data['wait']<=0){
+                            temp_data['game_step']=(temp_data['game_step']+1)%100+100;
+                            //UART_port.write(temp_data['game_step']);
                             if(AUTO_PLAY){
                                 temp_face=auto_play_find_best_action(2,temp_data['own_order']-1,99,2)[0];//((other_face-face[temp_data['own_order']%2]-4)%4));
                             }
                             face[temp_data['own_order']-1]=(face[temp_data['own_order']-1]+temp_face+4)%4;
                             temp_face=0;
                             UART_port.write(face[temp_data['own_order']-1]);
-                            temp_data['wait']=1;
+                            temp_data['wait']=2;
                             clock[2]=0;
+                            clock[4]=0;
                         }
                         clock[0]=0;
                     }
                     if(temp_data['wait']>0){
-                        if(clock[2]>=1000){
+                        if(clock[4]>=1000||clock[2]>=1000){
                             step=80;
                             break;
-                        }else if(clock[2]>=10){
+                        }else if(clock[2]>5){
                             if(temp_data['wait']==1&&RX_buffer.length>0){
                                 if(temp_data['game_step']===RX_buffer.shift()){
+                                    UART_port.write(face[temp_data['own_order']-1]);
+                                    clock[2]=0;
                                     temp_data['wait']=2;
                                 }else{
                                     // step=80;
@@ -871,8 +880,7 @@ async function main_loop(){
                                 }
                             }else if(temp_data['wait']==2&&RX_buffer.length>0){
                                 temp_data['wait']=0;
-                                const other_face=(RX_buffer.shift())%4;
-                                face[temp_data['own_order']%2]=other_face;
+                                face[temp_data['own_order']%2]=(RX_buffer.shift())%4;
                                 const stats=next_map(2);
                                 print_map();
                                 if(1<=stats&&stats<=4){

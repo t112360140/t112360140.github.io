@@ -205,8 +205,8 @@
                     flashArrow('uart2-right-arrow','#00ff00');
                 });
 
-                UARTList[0].setCode('function(data){LOG(data);UARTList[1].soft(data);}');
-                UARTList[1].setCode('function(data){LOG(data);UARTList[0].soft(data);}');
+                UARTList[0].setCode('function(data){LOG(`UART get: ${data}`);UARTList[1].soft(data);}');
+                UARTList[1].setCode('function(data){LOG(`UART get: ${data}`);UARTList[0].soft(data);}');
             }
 
             NewUart=(config={})=>{
@@ -284,8 +284,8 @@
                                                 this.onEvent.write.forEach((action)=>{
                                                     action(sendData);
                                                 });
-                                                this.writer.write(sendData);
-                                                this.writer.releaseLock();
+                                                this.writer.write(new Uint8Array(sendData));
+                                                //this.writer.releaseLock();
                                             }
                                         }
                                         this.read=async function(){
@@ -304,7 +304,7 @@
                                                             this.code([...value]);
                                                         }
                                                     }
-                                                    setTimeout(this.read(),0);
+                                                    setTimeout(()=>{this.read()},0);
                                                 }catch(error){
                                                     alert(`Error\: ${error}`);
                                                 }
