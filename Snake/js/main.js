@@ -450,7 +450,7 @@ var hourglass={
         // }
         let max=7;
         if(counter>16){
-            max=3-Math.floor((couter-17)/7);
+            max=3-Math.floor((counter-17)/7);
         }else if(counter>9){
             max=4;
         }else if(counter>4){
