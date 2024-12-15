@@ -425,23 +425,62 @@ var hourglass={
             }
         }
         let counter=this.totSand;
+        // for(let i=7;i>=1;i--){
+        //     let x=7;
+        //     if(i>4){
+        //         x=7-(i-4)*2;
+        //     }
+        //     for(let j=(4-Math.floor(x/2));j<=(4+Math.floor(x/2));j++){
+        //         if(counter>0){
+        //             while(1){
+        //                 const rand=Math.floor(this.rng.next()*x);
+        //                 if(this.map[i][(4-Math.floor(x/2))+rand]==0){
+        //                     this.map[i][(4-Math.floor(x/2))+rand]=counter;
+        //                     break;
+        //                 }
+        //             }
+        //             counter--;
+        //         }else{
+        //             break;
+        //         }
+        //     }
+        //     if(counter<=0){
+        //         break;
+        //     }
+        // }
+        let maxHight=6;
+        let count=0;
         for(let i=7;i>=1;i--){
             let x=7;
             if(i>4){
                 x=7-(i-4)*2;
             }
-            for(let j=(4-Math.floor(x/2));j<=(4+Math.floor(x/2));j++){
-                if(counter>0){
-                    while(1){
-                        const rand=Math.floor(this.rng.next()*x);
-                        if(this.map[i][(4-Math.floor(x/2))+rand]==0){
-                            this.map[i][(4-Math.floor(x/2))+rand]=counter;
-                            break;
-                        }
+            count+=x;
+            if(this.totSand<=count){
+                maxHight=i-1;
+                break;
+            }
+        }
+        for(let i=7;i>=1;i++){
+            if(counter>0){
+                this.map[i][4]=counter;
+                counter--;
+            }
+            for(let j=1;j<4;j++){
+                if(i-j>=7-maxHight){
+                    const rand=(this.rng.next()>0.5?(1):(-1));
+                    if(counter>0){
+                        this.map[i-j][4+j*rand]=counter;
+                        counter--;
+                    }else{
+                        break;
                     }
-                    counter--;
-                }else{
-                    break;
+                    if(counter>0){
+                        this.map[i-j][4-j*rand]=counter;
+                        counter--;
+                    }else{
+                        break;
+                    }
                 }
             }
             if(counter<=0){
@@ -548,20 +587,25 @@ async function main_loop(){
             }
             case 0:{
                 if(clock[0]>=1000){
-                    LED_PWM(3,0);
-                    LED_PWM(2,0);
-                    LED_PWM(0,0);
-                    LED_PWM(1,0);
-                    LCD_PRINTTURESTRING(0,0,"     SNAKE!     ");
-                    LCD_PRINTTURESTRING(0,1," 1. 1 PLAYER    ");
-                    LCD_PRINTTURESTRING(0,2," 2. 2 PLAYER    ");
-                    LCD_PRINTTURESTRING(0,3," 3. DIFFICULTY  ");
-                    point2=-1;
-                    step++;
-                    clock[0]=0;
-                    clock[1]=0;
-                    clock[2]=0;
-                    miniSnake.reset();
+                    if(BUTTON_PRESS(0)&&BUTTON_PRESS(1)){
+                        player_mode=3;
+                        step=0;
+                    }else{
+                        LED_PWM(3,0);
+                        LED_PWM(2,0);
+                        LED_PWM(0,0);
+                        LED_PWM(1,0);
+                        LCD_PRINTTURESTRING(0,0,"     SNAKE!     ");
+                        LCD_PRINTTURESTRING(0,1," 1. 1 PLAYER    ");
+                        LCD_PRINTTURESTRING(0,2," 2. 2 PLAYER    ");
+                        LCD_PRINTTURESTRING(0,3," 3. DIFFICULTY  ");
+                        point2=-1;
+                        step++;
+                        clock[0]=0;
+                        clock[1]=0;
+                        clock[2]=0;
+                        miniSnake.reset();
+                    }
                 }
                 break;
             }
@@ -580,7 +624,7 @@ async function main_loop(){
                     LCD_PRINTTURESTRING(0,point+1,'>');
                     point2=point;
                 }
-                if(BUTTON_STATUS(0)){
+                if(BUTTON_STATUS(0)==1){
                     if(point==0){
                         clock[0]=0;
                         player_mode=1;
@@ -637,7 +681,7 @@ async function main_loop(){
                     LCD_PRINTTURESTRING(0,point*2+1,'>');
                     point2=point;
                 }
-                if(BUTTON_STATUS(0)){
+                if(BUTTON_STATUS(0)==1){
                     if(point==0){
                         LCD_PRINTTURESTRING(0,1," ");
                         point2=-1;
@@ -686,7 +730,7 @@ async function main_loop(){
                     LCD_PRINTSTRING(0,1,temp_data['Progress']);
                     point2=point;
                 }
-                if(BUTTON_STATUS(0)){
+                if(BUTTON_STATUS(0)==1){
                     hard=point+1;
                     point2=-1;
                     step=2;
@@ -694,6 +738,7 @@ async function main_loop(){
                 break;
             }
             default:
+                clock[0]=0;
                 step=-1;
                 point2=-1;
                 break;
@@ -730,14 +775,14 @@ async function main_loop(){
                     break;
                 }
                 case 3:{
-                    if(BUTTON_STATUS(0)){
+                    if(BUTTON_STATUS(0)==1){
                         if(temp_face==0){
                             temp_face=-1;
                         }else if(temp_face==1){
                             temp_face=0;
                         }
                     }
-                    if(BUTTON_STATUS(1)){
+                    if(BUTTON_STATUS(1)==1){
                         if(temp_face==0){
                             temp_face=1;
                         }else if(temp_face==-1){
@@ -813,7 +858,7 @@ async function main_loop(){
                 case 6:{
                     if(clock[0]>1000){
                         LCD_PRINTTURESTRING(0,3,"  PRESS BUTTON  ");
-                        if(BUTTON_STATUS(0)||BUTTON_STATUS(1)){
+                        if(BUTTON_STATUS(0)==1||BUTTON_STATUS(1)==1){
                             player_mode=0;
                             step=0;
                         }
@@ -821,8 +866,9 @@ async function main_loop(){
                     break;
                 }
                 default:{
+                    clock[0]=0;
                     player_mode=0;
-                    step=0;
+                    step=-1;
                 }
             }
         }else if(player_mode===2){//2 player game
@@ -1094,7 +1140,7 @@ async function main_loop(){
                     break;
                 }
                 case 9:{
-                    if(BUTTON_STATUS(0)||BUTTON_STATUS(1)){
+                    if(BUTTON_STATUS(0)==1||BUTTON_STATUS(1)==1){
                         player_mode=0;
                         step=0;
                     }
@@ -1134,14 +1180,14 @@ async function main_loop(){
                     break;
                 }
                 case 13:{
-                    if(BUTTON_STATUS(0)){
+                    if(BUTTON_STATUS(0)==1){
                         if(temp_face==0){
                             temp_face=-1;
                         }else if(temp_face==1){
                             temp_face=0;
                         }
                     }
-                    if(BUTTON_STATUS(1)){
+                    if(BUTTON_STATUS(1)==1){
                         if(temp_face==0){
                             temp_face=1;
                         }else if(temp_face==-1){
@@ -1405,7 +1451,7 @@ async function main_loop(){
                     break;
                 }
                 case 99:{
-                    if(BUTTON_STATUS(0)||BUTTON_STATUS(1)){
+                    if(BUTTON_STATUS(0)==1||BUTTON_STATUS(1)==1==1){
                         player_mode=0;
                         step=0;
                     }
@@ -1413,12 +1459,97 @@ async function main_loop(){
                 }
                 default:{
                     player_mode=0;
-                    step=0;
+                    step=-1;
+                }
+            }
+        }else if(player_mode==3){	//joystick mode
+            switch(step){
+                case 0:{
+                    LCD_RESET();
+                    LCD_PRINTTURESTRING(0,0," JoyStick Mode! ");
+                    point2=-1;
+                    step=1;
+                    break;
+                }
+                case 9:{
+                    const button=[
+                        [0x00,0x00,0x00,0xE0,0x10,0x08,0x08,0x08,0x08,0x08,0x08,0x10,0xE0,0x00,0x00,0x00,0x00,0x00,0x00,0x07,0x08,0x10,0x10,0x10,0x10,0x10,0x10,0x08,0x07,0x00,0x00,0x00],
+                        [0x00,0x00,0x00,0xE0,0x10,0xC8,0xE8,0xE8,0xE8,0xE8,0xC8,0x10,0xE0,0x00,0x00,0x00,0x00,0x00,0x00,0x07,0x08,0x13,0x17,0x17,0x17,0x17,0x13,0x08,0x07,0x00,0x00,0x00]];
+                    for(let i=0;i<2;i++){
+                        for(let j=0;j<8;j++){
+                            let temp=[];
+                            for(let k=0;k<4;k++){
+                                temp.push(button[(BUTTON_PRESS(i)?1:0)][j*4+k]);
+                            }
+                            LCD_PRINTBLOCK(((j%4)+2)*4+i*16,4+Math.floor(j/4),temp);
+                        }
+                        const key_stats=BUTTON_STATUS(i);
+                        if(key_stats==1){
+                            console.log(i*2);//UART_WRITE()
+                        }else if(key_stats==-1){
+                            console.log(i*2+1);//UART_WRITE()
+                        }
+                    }
+                    point=GET_ADC_VALUE();
+                    if(point!=point2){
+                        let temp=[];
+                        for(let i=0;i<18*4*2;i++){
+                            temp.push(0x80>>(Math.floor(i/(18*4))*7));
+                            if(Math.floor(i%(18*4))-1>=0&&Math.floor(i%(18*4))-1==Math.floor((point*(18*4-1))/4096)){
+                                temp[i]=(0xF8>>(Math.floor(i/(18*4))*3));
+                                temp[i-1]=(0xF8>>(Math.floor(i/(18*4))*3));
+                            }
+                        }
+                        for(let i=0;i<2;i++){
+                            for(let j=0;j<18;j++){
+                                let block=[];
+                                for(let k=0;k<4;k++){
+                                    block.push(temp[i*18*4+j*4+k]);
+                                }
+                                LCD_PRINTBLOCK((j+12)*4,4+i,block);
+                            }
+                        }
+                        console.log((Math.floor((point*252)/4096))+4);//UART_WRITE()
+                        point2=point;
+                    }
+                    break;
+                }
+                case 1:{
+                    LCD_PRINTTURESTRING(0,2,"Web Ver Cant Use");
+                    LCD_PRINTTURESTRING(0,3,"  PRESS BUTTON  ");
+                    BUTTON_STATUS(0);
+                    BUTTON_STATUS(1);
+                    clock[0]=0;
+                    clock[1]=0;
+                    step++;
+                    break;
+                }
+                case 2:{
+                    if(clock[0]>=100){
+                        if(BUTTON_STATUS(0)==1||BUTTON_STATUS(1)==1){
+                            step++;
+                        }
+                    }
+                    if(clock[1]>=450+0xC350){
+                        LCD_PRINTSTRING(14,3,[164,165]);
+                        clock[1]=0xC350;
+                    }else if(clock[1]>=300+0xC350){
+                        LCD_PRINTSTRING(14,3,[168,169]);
+                    }else if(clock[1]>=150+0xC350){
+                        LCD_PRINTSTRING(14,3,[166,167]);
+                    }
+                    break;
+                }
+                default:{
+                    clock[0]=0;
+                    player_mode=0;
+                    step=-1;
                 }
             }
         }else{
+            clock[0]=0;
             player_mode=0;
-            step=0;
+            step=-1;
         }
     }
 }
@@ -1439,22 +1570,101 @@ setInterval(()=>{
 
 readData();
 async function readData(){
-    async function readLoop() {
+    async function readLoop(){
         if(UART_type===0&&UART_port['port']&&UART_port['reader']){
             try{
-                const {value,done }=await UART_port['reader'].read();
+                const {value,done}=await UART_port['reader'].read();
                 if(done){
                     UART_port['reader'].releaseLock();
                     return;
                 }
-                RX_buffer.push(value[0]);
-                setTimeout(readLoop, 0);
+                RX_buffer.concat([...value]);
+                setTimeout(readLoop,0);
             }catch(error){
-                console.error('Error:', error);
+                console.error('Error:',error);
             }
         }else{
-            setTimeout(readLoop, 0);
+            setTimeout(readLoop,0);
         }
     }
   readLoop();
+}
+
+var joystick={
+    UART:null,
+    writer:null,
+    reader:null,
+    connect:async function(){
+        try{
+            if(!this.UART){
+                this.UART=await navigator.serial.requestPort();
+                await this.UART.open({ baudRate: 9600 });
+            }
+            if(this.UART.writable&&!this.writer){
+                this.writer=this.UART.writable.getWriter();
+            }
+            if(this.UART.readable&&!this.reader){
+                this.reader=this.UART.readable.getReader();
+            }
+            this.UART.ondisconnect=()=>{
+                this.disconnect();
+            }
+        }catch(error){
+            alert(`ERROR: ${error}`);
+        }
+    },
+    disconnect:function(){
+        if(this.UART){
+            if(this.writer.locked){
+                this.writer.releaseLock();
+            }
+            if(this.reader.locked){
+                this.reader.releaseLock();
+            }
+            this.UART.forget();
+            this.UART.close();
+        }
+        this.UART=null;
+        this.writer=null;
+        this.reader=null;
+    },
+    read:async function(){
+        if(this.reader){
+            try{
+                const {value,done}=await this.reader.read();
+                if(done){
+                    this.reader.releaseLock();
+                    return;
+                }
+                const action=[...value];
+                for(let i=0;i<action.length;i++){
+                    switch(action[i]){
+                        case 0:
+                            document.getElementById('BT0').dataset.press='true';
+                            document.getElementById('BT0').getElementsByTagName('circle')[0].style.fill='#505050';
+                            break;
+                        case 1:
+                            document.getElementById('BT0').dataset.press='false';
+                            document.getElementById('BT0').getElementsByTagName('circle')[0].style.fill='#000000';
+                            break;
+                            
+                        case 2:
+                            document.getElementById('BT1').dataset.press='true';
+                            document.getElementById('BT1').getElementsByTagName('circle')[0].style.fill='#505050';
+                            break;
+                            
+                        case 3:
+                            document.getElementById('BT1').dataset.press='false';
+                            document.getElementById('BT1').getElementsByTagName('circle')[0].style.fill='#505050';
+                            break;
+                        default:
+                            document.getElementById('ADC').valut=Math.floor(((action[i]-4)*4096)/251).toString();
+                    }
+                }
+                setTimeout(()=>{this.read},0);
+            }catch(error){
+                console.error('Error:',error);
+            }
+        }
+    }
 }
