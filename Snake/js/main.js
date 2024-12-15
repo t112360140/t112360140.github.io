@@ -448,26 +448,19 @@ var hourglass={
         //         break;
         //     }
         // }
-        let maxHight=6;
-        let count=0;
-        for(let i=7;i>=1;i--){
-            let x=7;
-            if(i>4){
-                x=7-(i-4)*2;
-            }
-            count+=x;
-            if(this.totSand<=count){
-                maxHight=i-1;
-                break;
-            }
+        let max=7;
+        if(this.totSand>16){
+            max=3-Math.floor((this.totSand-17)/7);
+        }else if(this.totSand>9){
+            max=4;
+        }else if(this.totSand>4){
+            max=5;
+        }else if(this.totSand>1){
+            max=6;
         }
         for(let i=7;i>=1;i++){
-            if(counter>0){
-                this.map[i][4]=counter;
-                counter--;
-            }
             for(let j=1;j<4;j++){
-                if(i-j>=7-maxHight){
+                if(i-j>=max){
                     const rand=(this.rng.next()>0.5?(1):(-1));
                     if(counter>0){
                         this.map[i-j][4+j*rand]=counter;
