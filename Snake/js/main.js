@@ -459,6 +459,10 @@ var hourglass={
             max=6;
         }
         for(let i=7;i>=1;i++){
+            if(counter>0){
+                this.map[i][4]=counter;
+                counter--;
+            }
             for(let j=1;j<4;j++){
                 if(i-j>=max){
                     const rand=(this.rng.next()>0.5?(1):(-1));
