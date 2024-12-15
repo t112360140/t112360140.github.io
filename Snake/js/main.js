@@ -458,7 +458,7 @@ var hourglass={
         }else if(counter>1){
             max=6;
         }
-        for(let i=7;i>=1;i++){
+        for(let i=7;i>=1;i--){
             if(counter>0){
                 this.map[i][4]=counter;
                 counter--;
