@@ -180,6 +180,23 @@ function autp_play_find_list_action(num=1,map,face,pos,score,id=0){
     return [possible,hit];
 }
 
+function auto_play_mapRemove(map,n=1){
+    map=cloneJSON(map);
+    for(let k=0;k<n;k++){
+        for(let i=0;i<16;i++){
+            for(let j=0;j<32;j++){
+                if(map[i][j]>0){
+                    map[i][j]--;
+                }
+                if(map[i][j]==1024){
+                    map[i][j]=0;
+                }
+            }
+        }
+    }
+    return map;
+}
+
 let auto_play_loop_counter=0;
 function auto_play_find_best_action(num=1,id=0,other_action=0,n=4,tmap=null,tface=null,tpos=null,tscore=null,nfirst=null){
     if(n>0){
@@ -195,8 +212,15 @@ function auto_play_find_best_action(num=1,id=0,other_action=0,n=4,tmap=null,tfac
             for(let i=0;i<list[0].length;i++){
                 if(num==1||j>0||!list[1][id].includes(list[0][i]['action'][id])){
                     if(num==1||(other_action>10||list[0][i]['action'][(id+1)%2]==other_action)){
+                        let canLeave=0;
+                        if(list[0][i]['chunk_n'][id]>1){
+                            const n=list[0][i]['chunk_n'][id];
+                            if(auto_play_count_space(auto_play_mapRemove(list[0][i]['stats'][1],list[0][i]['space'][id]-1),list[0][i]['stats'][2][id])[id][1]>=n){
+                                canLeave=-50000;
+                            }
+                        }
                         const next_score=auto_play_find_best_action(num,id,99,n-1,list[0][i]['stats'][1],list[0][i]['stats'][4],list[0][i]['stats'][2],list[0][i]['stats'][3],true);
-                        const temp=(list[0][i]['space'][id]-list[0][i]['chunk_n'][id]*100-list[0][i]['apple_dis'][id]*2*(Math.max((auto_play_loop_counter-(32*16)),1))+list[0][i]['score'][id]*500)+0.5*next_score[1];
+                        const temp=canLeave+(list[0][i]['space'][id]-list[0][i]['chunk_n'][id]*100-list[0][i]['apple_dis'][id]*2*(Math.max((auto_play_loop_counter-(32*16)),1))+list[0][i]['score'][id]*500)+0.5*next_score[1];
                         if(temp>max_score){
                             max_score=temp;
                             action=list[0][i]['action'][id];

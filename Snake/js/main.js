@@ -15,6 +15,7 @@ var temp_face=0;
 var score=[0,0];
 var base_len=5;
 var clock=[0,0,0,0,0];
+var RX_buffer=[];
 
 var game_base_delay=150;
 
@@ -231,6 +232,301 @@ function reset(p=1){
     clock[0]=0;
 }
 
+var miniSnake={
+    rng:new RNG(9),
+    map:[],
+    lastMap:[],
+    face:1,
+    pos:[0,0],
+    score:0,
+    baseLen:3,
+    reset:function(){
+        this.score=0;
+        this.pos=[Math.floor(this.rng.next()*14),Math.floor(this.rng.next()*4)];
+        this.map=[];
+        this.lastMap=[];
+        for(let i=0;i<4;i++){
+            let temp=[[],[]];
+            for(let j=0;j<14;j++){
+                temp[0].push(0);
+                temp[1].push(128);
+            }
+            this.map.push(temp[0]);
+            this.lastMap.push(temp[1]);
+        }
+        this.map[this.pos[1]][this.pos[0]]=this.baseLen+this.score;
+        this.genApple();
+        this.printMap();
+    },
+    genApple:function(){
+        let counter=0;
+        for(let i=0;i<14;i++){
+            for(let j=0;j<4;j++){
+                if(this.map[j][i]<=0){
+                    counter++;
+                }
+            }
+        }
+        if(counter<=0){
+            return 0;
+        }else{
+            while(1){
+                const pos=[Math.floor(this.rng.next()*14),Math.floor(this.rng.next()*4)];
+                if(this.map[pos[1]][pos[0]]===0){
+                    this.map[pos[1]][pos[0]]=-1;
+                    return 1;
+                }
+            }
+        }
+    },
+    printMap:function(){
+        const icon=[[0x00,0x00,0x04,0x00],[0x00,0x0E,0x0E,0x0E],[0x01,0x0E,0x0A,0x0E],[0x02,0x0E,0x0A,0x0E]];
+        for(let i=0;i<2;i++){
+            for(let j=0;j<14;j++){
+                if(this.map[i*2][j]!==this.lastMap[i*2][j]||this.map[i*2+1][j]!==this.lastMap[i*2+1][j]){
+                    let temp=[0,0,0,0];
+                    for(let k=0;k<4;k++){
+                        temp[k]=icon[this.getPosStats(j,i*2)][k]+icon[this.getPosStats(j,i*2+1)][k]*16;
+                    }
+                    LCD_PRINTBLOCK((Math.floor(j/7)*21+j%7+2)*4,i,temp);
+                }
+                this.lastMap[i*2][j]=this.map[i*2][j];
+                this.lastMap[i*2+1][j]=this.map[i*2+1][j];
+            }
+        }
+    },
+    getPosStats:function(x,y){
+        if(this.map[y][x]>=1){
+            return 1;
+        }else if(this.map[y][x]==-1){
+            return 2;
+        }else if(this.map[y][x]==-2){
+            return 3;
+        }
+        return 0;
+    },
+    nextStep:function(){
+        let nextPos=[0,0];
+        let minDict=64;
+        for(let i=0;i<4;i++){
+            switch(i){
+                case 0:
+                    if(this.pos[1]>0&&this.map[this.pos[1]-1][this.pos[0]]<=0&&this.getDict(this.pos[0],this.pos[1]-1)<minDict){
+                        nextPos=[this.pos[0],this.pos[1]-1];
+                        minDict=this.getDict(this.pos[0],this.pos[1]-1);
+                    }
+                    break;
+                case 1:
+                    if(this.pos[0]<13&&this.map[this.pos[1]][this.pos[0]+1]<=0&&this.getDict(this.pos[0]+1,this.pos[1])<minDict){
+                        nextPos=[this.pos[0]+1,this.pos[1]];
+                        minDict=this.getDict(this.pos[0]+1,this.pos[1]);
+                    }
+                    break;
+                case 2:
+                    if(this.pos[1]<3&&this.map[this.pos[1]+1][this.pos[0]]<=0&&this.getDict(this.pos[0],this.pos[1]+1)<minDict){
+                        nextPos=[this.pos[0],this.pos[1]+1];
+                        minDict=this.getDict(this.pos[0],this.pos[1]+1);
+                    }
+                    break;
+                case 3:
+                    if(this.pos[0]>0&&this.map[this.pos[1]][this.pos[0]-1]<=0&&this.getDict(this.pos[0]-1,this.pos[1])<minDict){
+                        nextPos=[this.pos[0]-1,this.pos[1]];
+                        minDict=this.getDict(this.pos[0]-1,this.pos[1]);
+                    }
+                    break;
+            }
+        }
+        if(minDict>=64){
+            this.reset();
+            return;
+        }else{
+            this.pos=nextPos;
+            if(this.map[this.pos[1]][this.pos[0]]<0){
+                this.score++;
+                if(this.genApple()<=0){
+                    this.reset();
+                    return;
+                }
+            }
+            for(let i=0;i<14;i++){
+                for(let j=0;j<4;j++){
+                    if(this.map[j][i]>0){
+                        this.map[j][i]--;
+                    }
+                }
+            }
+            this.map[this.pos[1]][this.pos[0]]=this.baseLen+this.score;
+            this.printMap();
+        }
+    },
+    getDict:function(x,y){
+        let pos=[-1,-1];
+        for(let i=0;i<14;i++){
+            for(let j=0;j<4;j++){
+                if(this.map[j][i]<0){
+                    pos=[i,j];
+                    break;
+                }
+            }
+            if(pos[0]>=0){
+                break;
+            }
+        }
+        if(pos[0]>=0){
+            return (Math.abs(x-pos[0])+Math.abs(y-pos[1]));
+        }
+        return 0;
+    },
+    changeApple:function(){
+        for(let i=0;i<14;i++){
+            for(let j=0;j<4;j++){
+                if(this.map[j][i]===-1){
+                    this.map[j][i]=-2;
+                }else if(this.map[j][i]===-2){
+                    this.map[j][i]=-1;
+                }
+            }
+        }
+    },
+}
+
+var hourglass={
+    rng:new RNG(9),
+    map:[],
+    totSand:30,
+    fallPos:[16,16],
+    fallFnish:1,
+
+    reset:function(){
+        this.fallPos=[16,16];
+        this.fallFnish=1;
+        this.map=[];
+        for(let i=0;i<15;i++){
+            let temp=[];
+            for(let j=0;j<9;j++){
+                temp.push(0);
+            }
+            this.map.push(temp);
+        }
+        for(let i=1;i<8;i++){
+            this.map[0][i]=-1;
+            this.map[14][i]=-1;
+        }
+        for(let i=1;i<14;i++){
+            if(4<i&&i<=7){
+                this.map[i][(i-4)]=-1;
+                this.map[i][9-(i-3)]=-1;
+            }else if(7<i&&i<=9){
+                this.map[i][4-(i-6)]=-1;
+                this.map[i][4+(i-6)]=-1;
+            }else{
+                this.map[i][0]=-1;
+                this.map[i][8]=-1;
+            }
+        }
+        let counter=this.totSand;
+        for(let i=7;i>=1;i--){
+            let x=7;
+            if(i>4){
+                x=7-(i-4)*2;
+            }
+            for(let j=(4-Math.floor(x/2));j<=(4+Math.floor(x/2));j++){
+                if(counter>0){
+                    while(1){
+                        const rand=Math.floor(this.rng.next()*x);
+                        if(this.map[i][(4-Math.floor(x/2))+rand]==0){
+                            this.map[i][(4-Math.floor(x/2))+rand]=counter;
+                            break;
+                        }
+                    }
+                    counter--;
+                }else{
+                    break;
+                }
+            }
+            if(counter<=0){
+                break;
+            }
+        }
+    },
+    removeOneSand:function(){
+        if(this.fallFnish==1){
+            if(this.map[7][4]==0){
+                return 1;
+            }
+            for(let i=8;i>=1;i--){
+                for(let j=1;j<8;j++){
+                    if(this.map[i][j]>0){
+                        this.map[i][j]--;
+                    }
+                }
+            }
+            this.fallPos=[4,7];
+            this.fallFnish=0;
+        }
+        return 0;
+    },
+    fallOneSand:function(){
+        if(this.fallFnish==0){
+            if(this.map[this.fallPos[1]+1][this.fallPos[0]]==0&&this.fallPos[1]+1<14){
+                this.fallPos[1]++;
+            }else if(this.map[this.fallPos[1]+1][this.fallPos[0]-1]==0&&this.map[this.fallPos[1]+1][this.fallPos[0]+1]==0&&this.fallPos[1]+1<14){
+                this.fallPos[1]++;
+                if(this.rng.next()>0.5){
+                    this.fallPos[0]--;
+                }else{
+                    this.fallPos[0]++;
+                }
+            }else if(this.map[this.fallPos[1]+1][this.fallPos[0]-1]==0&&this.fallPos[1]+1<14){
+                this.fallPos[1]++;
+                this.fallPos[0]--;
+            }else if(this.map[this.fallPos[1]+1][this.fallPos[0]+1]==0&&this.fallPos[1]+1<14){
+                this.fallPos[1]++;
+                this.fallPos[0]++;
+            }else{
+                this.map[this.fallPos[1]][this.fallPos[0]]=-2;
+                this.fallPos=[16,16];
+                this.fallFnish=1;
+            }
+        }
+    },
+    print:function(x=0,y=0){
+        let char=[];
+        for(let i=0;i<32;i++){
+            char.push(0);
+        }
+        for(let i=14;i>=0;i--){
+            for(let j=0;j<9;j++){
+                char[Math.floor(i/8)*16+(j)+3]*=2;
+                if(this.map[i][j]!=0||(this.fallPos[0]==j&&this.fallPos[1]==i)){
+                    char[Math.floor(i/8)*16+(j)+3]+=1;
+                }
+            }
+        }
+        for(let i=0;i<2;i++){
+            for(let j=0;j<4;j++){
+                let temp=[];
+                for(let k=0;k<4;k++){
+                    temp.push(char[i*16+j*4+k]);
+                }
+                LCD_PRINTBLOCK((x*2+j)*4,y*2+i,temp);
+            }
+        }
+    },
+    printRotate:function(x=0,y=0){
+        const char=[0xE0,0x90,0x90,0x90,0x90,0x20,0x40,0x80,0x40,0x20,0x10,0x10,0x10,0x10,0xE0,0x00,0x0F,0x1F,0x1F,0x1F,0x1F,0x0F,0x06,0x02,0x04,0x08,0x10,0x10,0x10,0x10,0x0F,0x00];
+        for(let i=0;i<2;i++){
+            for(let j=0;j<4;j++){
+                let temp=[];
+                for(let k=0;k<4;k++){
+                    temp.push(char[i*16+j*4+k]);
+                }
+                LCD_PRINTBLOCK((x*2+j)*4,y*2+i,temp);
+            }
+        }
+    },
+}
+
 var step=-1;
 var hard=3;
 var player_mode=0;
@@ -263,10 +559,21 @@ async function main_loop(){
                     point2=-1;
                     step++;
                     clock[0]=0;
+                    clock[1]=0;
+                    clock[2]=0;
+                    miniSnake.reset();
                 }
                 break;
             }
             case 1:{
+                if(clock[1]>=150){
+                    miniSnake.nextStep();
+                    clock[1]=0;
+                }
+                if(clock[2]>=100){
+                    miniSnake.changeApple();
+                    clock[2]=0;
+                }
                 point=(Math.floor(GET_ADC_VALUE()/(0x1000/3)));
                 if(point2!=point){
                     LCD_PRINTTURESTRING(0,point2+1,' ');
@@ -505,7 +812,7 @@ async function main_loop(){
                 }
                 case 6:{
                     if(clock[0]>1000){
-                        LCD_PRINTTURESTRING(1,3," PRESS BUTTON ");
+                        LCD_PRINTTURESTRING(0,3,"  PRESS BUTTON  ");
                         if(BUTTON_STATUS(0)||BUTTON_STATUS(1)){
                             player_mode=0;
                             step=0;
@@ -519,12 +826,29 @@ async function main_loop(){
                 }
             }
         }else if(player_mode===2){//2 player game
+            if(1<=step&&step<=5||step==998){
+                if(clock[3]<50000&&clock[3]%20==0){
+                    hourglass.fallOneSand();
+                    hourglass.print(14,3);
+                }
+                if((200<=clock[3]&&clock[3]<50000)||50250<=clock[3]){
+                    if(hourglass.removeOneSand()==1){
+                        hourglass.reset();
+                        hourglass.printRotate(14,3);
+                        clock[3]=50000;
+                    }else{
+                        hourglass.print(14,3);
+                        clock[3]=0;
+                    }
+                }
+            }
             switch(step){
                 case 999:{
                     //Debug
                     break;
                 }
                 case 0:{
+                    // step=1;hourglass.reset();break;
                     if(UART_type===1){
                         if(!temp_data['webrtc_step']){
                             temp_data['webrtc_close']=false;
@@ -558,6 +882,9 @@ async function main_loop(){
                             RX_buffer=[];
                             clock[0]=0;
                             clock[2]=0;
+                            clock[3]=0;
+                            hourglass.reset();
+                            hourglass.print(14,3);
                         }else{
                             UART_port['port'].on('close',()=>{
                                 temp_data['webrtc_close']=true;
@@ -567,10 +894,23 @@ async function main_loop(){
                             document.getElementById('webrtc_set').style.display='none';
                             temp_data['webrtc_step']=12;
                         }
+                    }else if(UART_type===2){
+                        LCD_RESET();
+                        clock[0]=0;
+                        clock[2]=0;
+                        clock[3]=0;
+                        hourglass.reset();
+                        hourglass.print(14,3);
+                        LCD_PRINTTURESTRING(0,0,'Try to Connect');
+                        step=1;
+                        RX_buffer=[];
                     }else{
                         LCD_RESET();
                         clock[0]=0;
                         clock[2]=0;
+                        clock[3]=0;
+                        hourglass.reset();
+                        hourglass.print(14,3);
                         LCD_PRINTTURESTRING(0,0,'Try to Connect');
                         step=999;
                         RX_buffer=[];
@@ -695,6 +1035,21 @@ async function main_loop(){
                         LCD_PRINTTURESTRING(0,1,"                ");
                         step=1;
                     }
+                    
+                    if(clock[3]<50000&&clock[3]%20==0){
+                        hourglass.fallOneSand();
+                        hourglass.print(14,3);
+                    }
+                    if((200<=clock[3]&&clock[3]<50000)||50250<=clock[3]){
+                        if(hourglass.removeOneSand()==1){
+                            hourglass.reset();
+                            hourglass.printRotate(14,3);
+                            clock[3]=50000;
+                        }else{
+                            hourglass.print(14,3);
+                            clock[3]=0;
+                        }
+                    }
                     break;
                 }
                 case 6:{
@@ -703,6 +1058,7 @@ async function main_loop(){
                             LCD_PRINTTURESTRING(0,0,'Connect Success!');
                             LCD_PRINTTURESTRING(0,1,"                ");
                             LCD_PRINTTURESTRING(0,2,"Your are Player"+temp_data['own_order'].toString());
+                            LCD_PRINTTURESTRING(0,3,"                ");
                             const body=[[0x00,0xE0,0xE0,0xE0],[0x00,0xA0,0x40,0xA0]];
                             for(let i=0;i<12;i++){
                                 LCD_PRINTBLOCK((i+10)*4,6,body[temp_data['own_order']-1]);
@@ -733,7 +1089,7 @@ async function main_loop(){
                 }
                 case 8:{
                     LCD_PRINTTURESTRING(0,1,"    TIMEOUT!    ");
-                    LCD_PRINTTURESTRING(2,3,"PRESS BUTTON");
+                    LCD_PRINTTURESTRING(0,3,"  PRESS BUTTON  ");
                     step++;
                     break;
                 }
@@ -1003,14 +1359,14 @@ async function main_loop(){
                         LED_PWM(2,temp_data['win_count'][0]>=2?255:0);
                         LED_PWM(0,temp_data['win_count'][1]>=2?255:0);
                         LED_PWM(1,temp_data['win_count'][1]>=2?255:0);
-                        LCD_PRINTTURESTRING(2,3,"PRESS BUTTON");
+                        LCD_PRINTTURESTRING(0,3,"  PRESS BUTTON  ");
                         step=90;
                     }
                     break;
                 }
                 case 80:{
                     LCD_PRINTTURESTRING(3,1,"GAME ERROR!");
-                    LCD_PRINTTURESTRING(2,3,"PRESS BUTTON");
+                    LCD_PRINTTURESTRING(0,3,"  PRESS BUTTON  ");
                     step=90;
                     break;
                 }
@@ -1037,14 +1393,14 @@ async function main_loop(){
                 case 91:{
                     LCD_PRINTTURESTRING(0,0,"Serial not Close");
                     LCD_PRINTTURESTRING(2,1,"Please Check!");
-                    LCD_PRINTTURESTRING(2,3,"PRESS BUTTON");
+                    LCD_PRINTTURESTRING(0,3,"  PRESS BUTTON  ");
                     step=99;
                     break;
                 }
                 case 98:{
                     LCD_PRINTTURESTRING(0,0,"Serial Cant Open");
                     LCD_PRINTTURESTRING(2,1,"Please Check!");
-                    LCD_PRINTTURESTRING(2,3,"PRESS BUTTON");
+                    LCD_PRINTTURESTRING(0,3,"  PRESS BUTTON  ");
                     step++;
                     break;
                 }
