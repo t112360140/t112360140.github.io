@@ -449,13 +449,13 @@ var hourglass={
         //     }
         // }
         let max=7;
-        if(this.totSand>16){
-            max=3-Math.floor((this.totSand-17)/7);
-        }else if(this.totSand>9){
+        if(counter>16){
+            max=3-Math.floor((couter-17)/7);
+        }else if(counter>9){
             max=4;
-        }else if(this.totSand>4){
+        }else if(counter>4){
             max=5;
-        }else if(this.totSand>1){
+        }else if(counter>1){
             max=6;
         }
         for(let i=7;i>=1;i++){
@@ -478,6 +478,8 @@ var hourglass={
                     }else{
                         break;
                     }
+                }else{
+                    break;
                 }
             }
             if(counter<=0){
