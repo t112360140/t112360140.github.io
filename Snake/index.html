@@ -11,7 +11,8 @@
             <option value="1">WebRTC</option>
             <option value="2">None</option>
         </select></span><br>
-        <span style="white-space:nowarp;">Auto Play:<input type="checkbox" onchange="AUTO_PLAY=this.checked;"></span>
+        <span style="white-space:nowarp;">Auto Play:<input type="checkbox" onchange="AUTO_PLAY=this.checked;"></span><br>
+        <span style="white-space:nowarp;">JoyStick:<button onclick="joystick.connect();">Connect</button><button onclick="joystick.disconnect();">Disconnect</button></span>
         <div style="height:95%;width:100%;position:relative;">
             <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);">
                 <canvas id="canvas" style="height:512px;width:1024px;margin:auto;" height="512" width="1024"></canvas>
