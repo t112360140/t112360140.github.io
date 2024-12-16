@@ -17,6 +17,8 @@ var base_len=5;
 var clock=[0,0,0,0,0];
 var RX_buffer=[];
 
+var DarkMode=0;
+
 var game_base_delay=150;
 
 var UART_type=0;
@@ -597,7 +599,7 @@ async function main_loop(){
                         LCD_PRINTTURESTRING(0,0,"     SNAKE!     ");
                         LCD_PRINTTURESTRING(0,1," 1. 1 PLAYER    ");
                         LCD_PRINTTURESTRING(0,2," 2. 2 PLAYER    ");
-                        LCD_PRINTTURESTRING(0,3," 3. DIFFICULTY  ");
+                        LCD_PRINTTURESTRING(0,3," 3.  SETTING    ");
                         point2=-1;
                         step++;
                         clock[0]=0;
@@ -646,46 +648,66 @@ async function main_loop(){
                                 }
                             }
                         }
-                        step++;
-                        temp_data['Progress']=[83,84,85,85,85,85,85,85,85,85,85,85,85,85,85,86];
-                        switch(hard){
-                            case 1:
-                                temp_data['Progress'][1]=87;
-                                break;
-                            case 2:
-                                temp_data['Progress'][4]=88;
-                                break;
-                            case 3:
-                                temp_data['Progress'][8]=88;
-                                break;
-                            case 4:
-                                temp_data['Progress'][12]=88;
-                                break;
-                            case 5:
-                                temp_data['Progress'][15]=89;
-                                break;
-                        }
-                        LCD_PRINTTURESTRING(0,0,"   DIFFICULTY   ");
-                        LCD_PRINTSTRING(0,1,temp_data['Progress']);
-                        LCD_PRINTTURESTRING(0,2," 1  2   3   4  5");
-                        LCD_PRINTTURESTRING(0,3," EXIT           ");
+                        step=100;
                     }
                 }
                 break;
             }
+            case 100:{
+                step=2;
+                point2=-1;
+                LCD_RESET();
+                switch(hard){
+                    case 1:
+                        LCD_PRINTMINISTRING(8,2,"|------------");
+                        break;
+                    case 2:
+                        LCD_PRINTMINISTRING(8,2,"---|---------");
+                        break;
+                    case 3:
+                        LCD_PRINTMINISTRING(8,2,"------|------");
+                        break;
+                    case 4:
+                        LCD_PRINTMINISTRING(8,2,"---------|---");
+                        break;
+                    case 5:
+                        LCD_PRINTMINISTRING(8,2,"------------|");
+                        break;
+                }
+                LCD_PRINTTURESTRING(0,0,"     SETTING    ");
+                LCD_PRINTMINISTRING(0,2," 1.DIFF:");
+                LCD_PRINTMINISTRING(0,3,"        1  2  3  4  5");
+                LCD_PRINTMINISTRING(0,4," 2.DARKMODE:");
+                if(DarkMode==1){
+                    LCD_PRINTMINISTRING(12,4,"ON ");
+                }else{
+                    LCD_PRINTMINISTRING(12,4,"OFF");
+                }
+                LCD_PRINTMINISTRING(0,5,"");
+                LCD_PRINTMINISTRING(0,6,"  EXIT");
+                break;
+            }
             case 2:{
-                point=(Math.floor(GET_ADC_VALUE()/(0x1000/2)));
+                point=(Math.floor(GET_ADC_VALUE()/(0x1000/3)));
                 if(point2!=point){
-                    LCD_PRINTTURESTRING(0,point2*2+1,' ');
-                    LCD_PRINTTURESTRING(0,point*2+1,'>');
+                    LCD_PRINTMINISTRING(0,point2*2+2," ");
+                    LCD_PRINTMINISTRING(0,point*2+2,">");
                     point2=point;
                 }
                 if(BUTTON_STATUS(0)==1){
                     if(point==0){
-                        LCD_PRINTTURESTRING(0,1," ");
+                        LCD_PRINTMINISTRING(0,2," ");
                         point2=-1;
                         step++;
                     }else if(point==1){
+                        DarkMode=(DarkMode+1)%2;
+                        if(DarkMode==1){
+                            LCD_SETEFFECT(0xff);
+                        }else{
+                            LCD_SETEFFECT(0x00);
+                        }
+                        step=100;
+                    }else if(point==2){
                         for(let i=0;i<4;i++){
                             LED_PWM(i,0);
                         }
@@ -695,7 +717,6 @@ async function main_loop(){
                 break;
             }
             case 3:{
-                temp_data['Progress']=[83,84,85,85,85,85,85,85,85,85,85,85,85,85,85,86];
                 point=(Math.floor(GET_ADC_VALUE()/(0x1000/5)));
                 if(point2!=point){
                     for(let i=0;i<4;i++){
@@ -709,24 +730,23 @@ async function main_loop(){
                             }
                         }
                     }
-                    switch(point){
-                        case 0:
-                            temp_data['Progress'][1]=87;
-                            break;
+                    switch(point+1){
                         case 1:
-                            temp_data['Progress'][4]=88;
+                            LCD_PRINTMINISTRING(8,2,"|------------");
                             break;
                         case 2:
-                            temp_data['Progress'][8]=88;
+                            LCD_PRINTMINISTRING(8,2,"---|---------");
                             break;
                         case 3:
-                            temp_data['Progress'][12]=88;
+                            LCD_PRINTMINISTRING(8,2,"------|------");
                             break;
                         case 4:
-                            temp_data['Progress'][15]=89;
+                            LCD_PRINTMINISTRING(8,2,"---------|---");
+                            break;
+                        case 5:
+                            LCD_PRINTMINISTRING(8,2,"------------|");
                             break;
                     }
-                    LCD_PRINTSTRING(0,1,temp_data['Progress']);
                     point2=point;
                 }
                 if(BUTTON_STATUS(0)==1){
@@ -1079,21 +1099,6 @@ async function main_loop(){
                     if(clock[1]>=1000){
                         LCD_PRINTTURESTRING(0,1,"                ");
                         step=1;
-                    }
-                    
-                    if(clock[3]<50000&&clock[3]%20==0){
-                        hourglass.fallOneSand();
-                        hourglass.print(14,3);
-                    }
-                    if((200<=clock[3]&&clock[3]<50000)||50250<=clock[3]){
-                        if(hourglass.removeOneSand()==1){
-                            hourglass.reset();
-                            hourglass.printRotate(14,3);
-                            clock[3]=50000;
-                        }else{
-                            hourglass.print(14,3);
-                            clock[3]=0;
-                        }
                     }
                     break;
                 }
