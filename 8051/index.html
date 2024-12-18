@@ -724,12 +724,12 @@ TABLE:	DB	01111110B
                 code=code.replaceAll(/:[ \t]*\n/g,':').replaceAll(/: */g,':').replaceAll(/\n+/g,'\n').replaceAll('\t',' ').replaceAll(/ +/g,' ').replaceAll(/^ */mg,'').split('\n');
                 let maxLen=1;
                 let out='';
-                    for(let i=0;i<code.length;i++){
-                        const codeLine=code[i].split(';')[0].replaceAll(/[ \t\n]/g,'').replace(/^[^:]:/,'');
-                        if((Math.ceil(codeLine.length/8))>maxLen){
-                            maxLen=(Math.ceil(codeLine.length/8));
-                        }
+                for(let i=0;i<code.length;i++){
+                    const codeLine=code[i].split(';')[0].replaceAll(/[ \t\n]/g,'').replace(/^[^:]:/,'');
+                    if((Math.ceil(codeLine.length/8))>maxLen){
+                        maxLen=(Math.ceil(codeLine.length/8));
                     }
+                }
                 for(let i=0;i<code.length;i++){
                     let codeLine=code[i].split(';')[0].replace(/ +$/,'');
                     let lineOut='';
