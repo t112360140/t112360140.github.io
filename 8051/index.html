@@ -297,12 +297,30 @@ TABLE:	DB	01111110B
                         
                     ">to HEX</button> -->
                 </div>
+                <div style="height:50%;width:50%;margin:10px 0 30px 0;">
+                    <textarea id="UART-data-viewer" style="height:100%;width:100%;resize:none;" spellcheck="false" wrap="off"></textarea>
+                    <input id="UART-send">
+                    <button onclick="
+                        if(UART&&!downloading){
+                            const data=document.getElementById('UART-send').value;
+                            UART_send(data);
+                        }
+                    ">Send Char</button>
+                    <button onclick="
+                        if(UART&&!downloading){
+                            const data=Number(document.getElementById('UART-send').value);
+                            UART_send(data);
+                        }
+                    ">Send Data</button>
+                    <button onclick="document.getElementById('UART-data-viewer').value='';">Clear</button>
+                </div>
             </div>
         </div>
         <script>
             let UART,UART_writer,UART_reader;
             let RX_buffer=[];
             var file;
+            var downloading=false;
 
             window.onload=()=>{
                 const lastCode=localStorage.getItem('lastCode');;
@@ -757,12 +775,18 @@ TABLE:	DB	01111110B
             }
 
             function UART_send(data){
-                let temp=new Uint8Array(1);
-                temp[0]=data;
-                UART_writer.write(temp);
+                if(typeof data==='number'){
+                    data=new Uint8Array([data]);
+                }else if(typeof data==='string'){
+                    data=new TextEncoder().encode(data);
+                }else{
+                    data=new Uint8Array(data);
+                }
+                UART_writer.write(data);
             }
 
             function download(){
+                downloading=true;
                 setProgress(0,100);
                 UART_send(80);//P
                 UART_send(Math.floor(file.length/256));
@@ -782,6 +806,7 @@ TABLE:	DB	01111110B
                                 }else{
                                     setProgress(100,100);
                                     console.log('download finish!');
+                                    downloading=false;
                                     //closeUART();
                                 }
                             }else if(counter<2000){
@@ -789,12 +814,15 @@ TABLE:	DB	01111110B
                             }else{
                                 setProgress(0,100);
                                 alert('download error!');
+                                downloading=false;
                                 //closeUART();
                             }
                         },4);
                     }
                 }
             }
+
+            const UART_data_viewer=document.getElementById('UART-data-viewer');
 
             readData();
             async function readData(){
@@ -806,7 +834,13 @@ TABLE:	DB	01111110B
                                 UART_reader.releaseLock();
                                 return;
                             }
-                            RX_buffer.push(value[0]);
+                            if(downloading){
+                                RX_buffer=RX_buffer.concat([...value]);
+                            }else{
+                                for(let i=0;i<value.length;i++){
+                                    UART_data_viewer.value+=`${getTimeString()}: ${value[i]} / ${new TextDecoder().decode(new Uint8Array([value[i]]))}`;
+                                }
+                            }
                             setTimeout(readLoop, 0);
                         }catch(error){
                             console.error('Error:', error);
@@ -840,7 +874,12 @@ TABLE:	DB	01111110B
                 progress.innerHTML=`${Math.floor((value/max)*100)}%`;
             }
 
-            TSH=s=>{for(var i=0,h=9;i<s.length;)h=Math.imul(h^s.charCodeAt(i++),9**9);return h^h>>>9}
+            TSH=s=>{for(var i=0,h=9;i<s.length;)h=Math.imul(h^s.charCodeAt(i++),9**9);return h^h>>>9};
+
+            function getTimeString(){
+                const data=new Date();
+                return `${data.getHours().toString().padStart(2,'0')}:${data.getMinutes().toString().padStart(2,'0')}:${data.getSeconds().toString().padStart(2,'0')}-${data.getMilliseconds().toString().padStart(3,'0')}`;
+            }
         </script>
     </body>
 </html>
