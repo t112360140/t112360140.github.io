@@ -733,7 +733,7 @@ TABLE:	DB	01111110B
                 for(let i=0;i<code.length;i++){
                     let codeLine=code[i].split(';')[0].replace(/ +$/,'').toUpperCase();
                     let lineOut='';
-                    if(!(/^[A-z0-9:#@$, ]+($|;)/mg.test(code[i]))){
+                    if(!(/^[A-z0-9:#@$+, ]*($|;)/mg.test(code[i]))){
                         for(let j=0;j<maxLen+1;j++){
                             lineOut+='\t';
                         }
