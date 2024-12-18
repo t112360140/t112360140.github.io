@@ -267,7 +267,23 @@ TABLE:	DB	01111110B
                 }
             ">OTHER</button>
             <div id="log" style="width:100%;display:none;">
-                <textarea id="X8051-log" style="height:50%;width:50%;margin:10px 0 10px 0;float:left;resize:none;" wrap="off" spellcheck="false" readonly></textarea>
+                <div style="height:50%;width:50%;margin:10px 0 30px 0;">
+                    <textarea id="UART-data-viewer" style="height:100%;width:100%;resize:none;" spellcheck="false" wrap="off" readonly></textarea>
+                    <input id="UART-send">
+                    <button onclick="
+                        if(UART&&!downloading){
+                            const data=document.getElementById('UART-send').value;
+                            UART_send(data);
+                        }
+                    ">Send Char</button>
+                    <button onclick="
+                        if(UART&&!downloading){
+                            const data=Number(document.getElementById('UART-send').value);
+                            UART_send(data);
+                        }
+                    ">Send Data</button>
+                    <button onclick="document.getElementById('UART-data-viewer').value='';">Clear</button>
+                </div>
                 <div style="height:50%;width:50%;margin:10px 0 30px 0;float:right;">
                     <textarea id="file-viewer" style="height:100%;width:100%;resize:none;" spellcheck="false" wrap="off"></textarea>
                     <button id="file-viewer-save" style="float:right;" onclick="
@@ -297,23 +313,7 @@ TABLE:	DB	01111110B
                         
                     ">to HEX</button> -->
                 </div>
-                <div style="height:50%;width:50%;margin:10px 0 30px 0;">
-                    <textarea id="UART-data-viewer" style="height:100%;width:100%;resize:none;" spellcheck="false" wrap="off" readonly></textarea>
-                    <input id="UART-send">
-                    <button onclick="
-                        if(UART&&!downloading){
-                            const data=document.getElementById('UART-send').value;
-                            UART_send(data);
-                        }
-                    ">Send Char</button>
-                    <button onclick="
-                        if(UART&&!downloading){
-                            const data=Number(document.getElementById('UART-send').value);
-                            UART_send(data);
-                        }
-                    ">Send Data</button>
-                    <button onclick="document.getElementById('UART-data-viewer').value='';">Clear</button>
-                </div>
+                <textarea id="X8051-log" style="height:50%;width:50%;margin:10px 0 10px 0;float:left;resize:none;" wrap="off" spellcheck="false" readonly></textarea>
             </div>
         </div>
         <script>
