@@ -86,6 +86,10 @@ TABLE:	DB	01111110B
         DB	11011011B
         DB	10111101B
         END</textarea>
+                                <button onclick="
+                                    const ASM=document.getElementById('asm');
+                                    ASM.value=ASMBeautifier(ASM.value);
+                                ">Beautifier</button>
                                 <input type="file" onchange="
                                     {
                                         const _file=this.files[0];
@@ -714,6 +718,39 @@ TABLE:	DB	01111110B
                         })
                         .catch((error)=>{});
                 }
+            }
+
+            function ASMBeautifier(code=''){
+                code=code.replaceAll(/:[ \t]*\n/g,':').replaceAll(/: */g,':').replaceAll(/\n+/g,'\n').replaceAll('\t',' ').replaceAll(/ +/g,' ').replaceAll(/^ */mg,'').split('\n');
+                    let maxLen=1;
+                let out='';
+                    for(let i=0;i<code.length;i++){
+                        const codeLine=code[i].split(';')[0].replace(/ +$/,'').replace(/^[^:]:/,'')+':';
+                        if((Math.ceil(codeLine.length/8)+1)>maxLen){
+                            maxLen=(Math.ceil(codeLine.length/8)+1);
+                        }
+                    }
+                for(let i=0;i<code.length;i++){
+                    let codeLine=code[i].split(';')[0].replace(/ +$/,'');
+                    let lineOut='';
+                    if(codeLine.includes(':')){
+                        lineOut+=`\n${codeLine.split(':')[0]}:\n`;
+                        codeLine=codeLine.replace(/^[^:]+:/g,'');
+                    }
+                    if(codeLine!=''){
+                        lineOut+=`\t${codeLine.split(' ')[0]}\t${codeLine.replace(/^(\S+)/,'').replace(/^ /,'')}`;
+                    }
+                    if(code[i].split(';')[1]){
+                        if(codeLine!=''){
+                            for(let j=0;j<(maxLen-(Math.ceil((lineOut.replace(/^\n.*\n/g,'').length)/8)));j++){
+                                lineOut+='\t';
+                            }
+                        }
+                        lineOut+=`${code[i].replace(/^[^;]+/g,'')}`;
+                    }
+                    out+=`${lineOut}\n`;
+                }
+                return out.replaceAll('\t\n','\n').replaceAll(/\n$/g,'');
             }
 
             var keyLog='';
