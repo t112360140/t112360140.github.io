@@ -722,7 +722,7 @@ TABLE:	DB	01111110B
 
             function ASMBeautifier(code=''){
                 code=code.replaceAll(/:[ \t]*\n/g,':').replaceAll(/: */g,':').replaceAll(/\n+/g,'\n').replaceAll('\t',' ').replaceAll(/ +/g,' ').replaceAll(/^ */mg,'').split('\n');
-                    let maxLen=1;
+                let maxLen=1;
                 let out='';
                     for(let i=0;i<code.length;i++){
                         const codeLine=code[i].split(';')[0].replaceAll(/[ \t\n]/g,'').replace(/^[^:]:/,'');
