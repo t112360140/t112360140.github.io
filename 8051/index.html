@@ -725,7 +725,7 @@ TABLE:	DB	01111110B
                     let maxLen=1;
                 let out='';
                     for(let i=0;i<code.length;i++){
-                        const codeLine=code[i].split(';')[0].replace(/ +$/,'').replace(/^[^:]:/,'')+':';
+                        const codeLine=code[i].split(';')[0].replaceAll(/[ \t\n]/g,'').replace(/^[^:]:/,'');
                         if((Math.ceil(codeLine.length/8)+1)>maxLen){
                             maxLen=(Math.ceil(codeLine.length/8)+1);
                         }
@@ -737,12 +737,13 @@ TABLE:	DB	01111110B
                         lineOut+=`\n${codeLine.split(':')[0]}:\n`;
                         codeLine=codeLine.replace(/^[^:]+:/g,'');
                     }
+                    codeLine=codeLine.replaceAll(/^ */g,'');
                     if(codeLine!=''){
                         lineOut+=`\t${codeLine.split(' ')[0]}\t${codeLine.replace(/^(\S+)/,'').replace(/^ /,'')}`;
                     }
                     if(code[i].split(';')[1]){
                         if(codeLine!=''){
-                            for(let j=0;j<(maxLen-(Math.ceil((lineOut.replace(/^\n.*\n/g,'').length)/8)));j++){
+                            for(let j=0;j<(maxLen-(Math.round((lineOut.replace(/^\n.*\n/g,'').replaceAll(/[ \t\n]/g,'').length)/8)));j++){
                                 lineOut+='\t';
                             }
                         }
