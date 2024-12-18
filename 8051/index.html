@@ -842,7 +842,7 @@ TABLE:	DB	01111110B
                                     UART_data_viewer.value+=new TextDecoder().decode(value);
                                 }else{
                                     for(let i=0;i<value.length;i++){
-                                        UART_data_viewer.value+=`${getTimeString()}: ${value[i]} / ${new TextDecoder().decode(new Uint8Array([value[i]]))}\n`;
+                                        UART_data_viewer.value+=`${getTimeString()}: ${value[i].toString().padStart(3,' ')} / ${new TextDecoder().decode(new Uint8Array([value[i]]))}\n`;
                                     }
                                 }
                             }
