@@ -720,7 +720,7 @@ TABLE:	DB	01111110B
                 }
             }
 
-            function ASMBeautifier(code=''){
+            function ASMBeautifier(code=''){    //格式化程式
                 code=code.replaceAll(/:[ \t]*\n/g,':').replaceAll(/: */g,':').replaceAll(/\n+/g,'\n').replaceAll('\t',' ').replaceAll(/ +/g,' ').replaceAll(/^ */mg,'').split('\n');
                 let maxLen=1;
                 let out='';
@@ -731,23 +731,33 @@ TABLE:	DB	01111110B
                     }
                 }
                 for(let i=0;i<code.length;i++){
-                    let codeLine=code[i].split(';')[0].replace(/ +$/,'');
+                    let codeLine=code[i].split(';')[0].replace(/ +$/,'').toUpperCase();
                     let lineOut='';
-                    if(codeLine.includes(':')){
-                        lineOut+=`\n${codeLine.split(':')[0]}:\n`;
-                        codeLine=codeLine.replace(/^[^:]+:/g,'');
-                    }
-                    codeLine=codeLine.replaceAll(/^ */g,'');
-                    if(codeLine!=''){
-                        lineOut+=`\t${codeLine.split(' ')[0]}\t${codeLine.replace(/^(\S+)/,'').replace(/^ /,'')}`;
-                    }
-                    if(code[i].split(';')[1]){
-                        if(codeLine!=''){
-                            for(let j=0;j<(maxLen-(Math.round((lineOut.replace(/^\n.*\n/g,'').replaceAll(/[ \t\n]/g,'').length)/8)));j++){
-                                lineOut+='\t';
-                            }
+                    if(!(/^[A-z0-9:#@$, ]+($|;)/mg.test(code[i]))){
+                        for(let j=0;j<maxLen+1;j++){
+                            lineOut+='\t';
                         }
-                        lineOut+=`${code[i].replace(/^[^;]+/g,'')}`;
+                        if(!(/^;/.test(code[i]))){
+                            lineOut+=';';
+                        }
+                        lineOut+=code[i];
+                    }else{
+                        if(codeLine.includes(':')){
+                            lineOut+=`\n${codeLine.split(':')[0]}:\n`;
+                            codeLine=codeLine.replace(/^[^:]+:/g,'');
+                        }
+                        codeLine=codeLine.replaceAll(/^ */g,'');
+                        if(codeLine!=''){
+                            lineOut+=`\t${codeLine.split(' ')[0]}\t${codeLine.replace(/^(\S+)/,'').replace(/^ /,'')}`;
+                        }
+                        if(code[i].split(';')[1]){
+                            if(codeLine!=''){
+                                for(let j=0;j<(maxLen-(Math.round((lineOut.replace(/^\n.*\n/g,'').replaceAll(/[ \t\n]/g,'').length)/8)));j++){
+                                    lineOut+='\t';
+                                }
+                            }
+                            lineOut+=`${code[i].replace(/^[^;]+/g,'')}`;
+                        }
                     }
                     out+=`${lineOut}\n`;
                 }
