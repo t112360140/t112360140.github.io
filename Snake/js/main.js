@@ -892,9 +892,10 @@ async function main_loop(){
             }
         }else if(player_mode===2){//2 player game
             if(1<=step&&step<=5||step==998){
-                if(clock[3]<50000&&clock[3]%20==0){
+                if(clock[3]<50000&&clock[4]>=70){
                     hourglass.fallOneSand();
                     hourglass.print(14,3);
+                    clock[4]=0;
                 }
                 if((200<=clock[3]&&clock[3]<50000)||50250<=clock[3]){
                     if(hourglass.removeOneSand()==1){
@@ -948,6 +949,7 @@ async function main_loop(){
                             clock[0]=0;
                             clock[2]=0;
                             clock[3]=0;
+                            clock[4]=0;
                             hourglass.reset();
                             hourglass.print(14,3);
                         }else{
@@ -964,6 +966,7 @@ async function main_loop(){
                         clock[0]=0;
                         clock[2]=0;
                         clock[3]=0;
+                        clock[4]=0;
                         hourglass.reset();
                         hourglass.print(14,3);
                         LCD_PRINTTURESTRING(0,0,'Try to Connect');
@@ -974,6 +977,7 @@ async function main_loop(){
                         clock[0]=0;
                         clock[2]=0;
                         clock[3]=0;
+                        clock[4]=0;
                         hourglass.reset();
                         hourglass.print(14,3);
                         LCD_PRINTTURESTRING(0,0,'Try to Connect');
@@ -1006,9 +1010,10 @@ async function main_loop(){
                 case 1:{
                     if(RX_buffer.length>0&&RX_buffer.shift()===112){
                         UART_port.write(112);
+                        clock[1]=0;
                         step=998;
                     }else if(clock[0]>=1000){
-                        RX_buffer=[];
+                        //RX_buffer=[];
                         UART_port.write(112);
                         clock[0]=0;
                     }
@@ -1582,8 +1587,8 @@ async function readData(){
                     UART_port['reader'].releaseLock();
                     return;
                 }
-                RX_buffer.concat([...value]);
-                setTimeout(readLoop,0);
+                RX_buffer=RX_buffer.concat([...value]);
+                setTimeout(()=>{readLoop();},0);
             }catch(error){
                 console.error('Error:',error);
             }
@@ -1613,6 +1618,7 @@ var joystick={
             this.UART.ondisconnect=()=>{
                 this.disconnect();
             }
+            this.read();
         }catch(error){
             alert(`ERROR: ${error}`);
         }
@@ -1662,10 +1668,10 @@ var joystick={
                             document.getElementById('BT1').getElementsByTagName('circle')[0].style.fill='#505050';
                             break;
                         default:
-                            document.getElementById('ADC').valut=Math.floor(((action[i]-4)*4096)/251).toString();
+                            document.getElementById('ADC').value=Math.floor(((action[i]-4)*4096)/251).toString();
                     }
                 }
-                setTimeout(()=>{this.read},0);
+                setTimeout(()=>{this.read();},0);
             }catch(error){
                 console.error('Error:',error);
             }
