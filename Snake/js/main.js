@@ -1013,7 +1013,7 @@ async function main_loop(){
                         clock[1]=0;
                         step=998;
                     }else if(clock[0]>=1000){
-                        //RX_buffer=[];
+                        RX_buffer=[];
                         UART_port.write(112);
                         clock[0]=0;
                     }
