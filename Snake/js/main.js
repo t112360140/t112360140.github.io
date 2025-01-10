@@ -1557,14 +1557,15 @@ async function main_loop(){
         }else if(player_mode===9){  //debug mode
             switch(step){
                 case 900:{
-                        miniSnake.reset();
-                        hourglass.reset();
-                        hourglass.print(14,3);
-                        clock[0]=0;
-                        clock[1]=0;
-                        clock[2]=0;
-                        clock[3]=0;
-                        step++;
+                    LCD_RESET();
+                    miniSnake.reset();
+                    hourglass.reset();
+                    hourglass.print(14,3);
+                    clock[0]=0;
+                    clock[1]=0;
+                    clock[2]=0;
+                    clock[3]=0;
+                    step++;
                     break;
                 }
                 case 901:{
