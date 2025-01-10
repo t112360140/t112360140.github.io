@@ -1554,6 +1554,50 @@ async function main_loop(){
                     step=-1;
                 }
             }
+        }else if(player_mode===9){  //debug mode
+            switch(step){
+                case 900:{
+                        miniSnake.reset();
+                        hourglass.reset();
+                        hourglass.print(14,3);
+                        clock[0]=0;
+                        clock[1]=0;
+                        clock[2]=0;
+                        clock[3]=0;
+                        step++;
+                    break;
+                }
+                case 901:{
+                    if(clock[0]>=150){
+                        miniSnake.nextStep();
+                        clock[0]=0;
+                    }
+                    if(clock[1]>=100){
+                        miniSnake.changeApple();
+                        clock[1]=0;
+                    }
+
+                    if(clock[2]<50000&&clock[3]>=70){
+                        hourglass.fallOneSand();
+                        hourglass.print(14,3);
+                        clock[3]=0;
+                    }
+                    if((200<=clock[2]&&clock[2]<50000)||50250<=clock[2]){
+                        if(hourglass.removeOneSand()==1){
+                            hourglass.reset();
+                            hourglass.printRotate(14,3);
+                            clock[2]=50000;
+                        }else{
+                            hourglass.print(14,3);
+                            clock[2]=0;
+                        }
+                    }
+                    break;
+                }
+                default:{
+                    step=900;
+                }
+            }
         }else{
             clock[0]=0;
             player_mode=0;
