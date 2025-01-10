@@ -1460,7 +1460,7 @@ async function main_loop(){
                     break;
                 }
                 case 99:{
-                    if(BUTTON_STATUS(0)==1||BUTTON_STATUS(1)==1==1){
+                    if(BUTTON_STATUS(0)==1||BUTTON_STATUS(1)==1){
                         player_mode=0;
                         step=0;
                     }
