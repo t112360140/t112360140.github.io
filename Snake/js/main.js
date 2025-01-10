@@ -1558,6 +1558,7 @@ async function main_loop(){
             switch(step){
                 case 900:{
                     LCD_RESET();
+                    LCD_PRINTTURESTRING(0,0,'     Debug!     ');
                     miniSnake.reset();
                     hourglass.reset();
                     hourglass.print(14,3);
