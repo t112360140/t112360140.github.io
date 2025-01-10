@@ -1437,8 +1437,7 @@ async function main_loop(){
                             // UART_port['port']=null;
                             // UART_port['writer']=null;
                             // UART_port['reader']=null;
-                            player_mode=0;
-                            step=0;
+                            step=99;
                         }catch(error){
                             step++;
                         }
