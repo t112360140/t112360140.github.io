@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>nRF52840 陣列檢測 (分行封包穩定版)</title>
+    <title>nRF52840 陣列檢測 (防爆版)</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -55,17 +55,32 @@
         .grid-horizontal { max-width: 1300px; }
         .grid-vertical { max-width: 380px; }
 
-        /* 防爆版面 CSS */
+        /* ========================================= */
+        /*  關鍵修改：防止格子被髒資料撐大 */
+        /* ========================================= */
         .cell {
             aspect-ratio: 1; 
             background-color: #fff; 
-            display: flex; align-items: center; justify-content: center;
-            font-size: 10px; color: transparent; user-select: none;
-            overflow: hidden; white-space: nowrap; min-width: 0; min-height: 0;
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            font-size: 10px; 
+            color: transparent; 
+            user-select: none;
+            
+            /* 1. 超出範圍隱藏 */
+            overflow: hidden;
+            /* 2. 禁止文字換行 */
+            white-space: nowrap;
+            /* 3. 重要：允許 Grid 子元素縮小到內容寬度以下 */
+            min-width: 0;
+            min-height: 0;
         }
+        
         .cell:hover {
             color: #000; z-index: 10; font-weight: bold; border: 1px solid #333;
             transform: scale(1.5); box-shadow: 0 0 5px rgba(0,0,0,0.3); background-color: white !important; 
+            /* hover 時要讓文字完整顯示，所以允許 overflow */
             overflow: visible; 
         }
         .cell.error { background-color: #000 !important; color: #ff3333 !important; font-weight: bold; border: 1px solid #555; }
@@ -87,7 +102,7 @@
 </head>
 <body>
 
-    <h2>📡 nRF52840 陣列檢測 - 分行封包穩定版</h2>
+    <h2>📡 nRF52840 陣列檢測 - Binary 同步版</h2>
     
     <div class="controls-group">
         <button id="connectBtn" class="btn-connect">🔵 連線 Bluetooth</button>
@@ -120,7 +135,7 @@
             NUS_RX_CHAR_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e"; 
 
             Device = null; GattServer = null; TxCharacteristic = null; RxCharacteristic = null;
-            SerialEvent = { connect: [], disconnect: [], getData: [] };
+            SerialEvent = { connect: [], disconnect: [], getData: [], sendData: [] };
 
             constructor(config = {}) {
                 this.config = { service: config.service || this.NUS_SERVICE_UUID, tx: config.tx || this.NUS_TX_CHAR_UUID, rx: config.rx || this.NUS_RX_CHAR_UUID };
@@ -128,12 +143,13 @@
             async init() {
                 try {
                     if (!navigator.bluetooth) throw new Error('Web Bluetooth API not available');
-                    this.Device = await navigator.bluetooth.requestDevice({ filters: [{ services: [this.config.service] }] });
+                    this.Device = await navigator.bluetooth.requestDevice({ filters: [{ services: [this.config.service] }], });
                     if (!this.Device) throw new Error('No device selected.');
                     this.Device.addEventListener('gattserverdisconnected', () => this.runEvent('disconnect'));
                     this.GattServer = await this.Device.gatt.connect();
                     const service = await this.GattServer.getPrimaryService(this.config.service);
                     this.TxCharacteristic = await service.getCharacteristic(this.config.tx);
+                    this.RxCharacteristic = await service.getCharacteristic(this.config.rx);
                     await this.TxCharacteristic.startNotifications();
                     this.TxCharacteristic.addEventListener('characteristicvaluechanged', (event) => this.runEvent('getData', event.target.value));
                     this.runEvent('connect');
@@ -148,9 +164,10 @@
         const DATA_ROWS = 8;
         const DATA_COLS = 31;
         const TOTAL_CELLS = DATA_ROWS * DATA_COLS;
-        
-        // Protocol Definitions
-        const ROW_PACKET_SIZE = 1 + (DATA_COLS * 4); // 1 byte index + 124 bytes data = 125 bytes
+        const PAYLOAD_SIZE = TOTAL_CELLS * 4; 
+        const HEADER_SIZE = 4;
+        const TOTAL_FRAME_SIZE = HEADER_SIZE + PAYLOAD_SIZE; 
+        const HEADER_SEQ = [0xFA, 0xFB, 0xFC, 0xFD];
 
         const cells = []; 
         let rawMatrixData = new Float32Array(TOTAL_CELLS);
@@ -160,6 +177,7 @@
         let rotationAngle = 0;
 
         const ble = new BleSerial();
+        let pendingBuffer = new Uint8Array(0); 
 
         function initGrid() {
             const container = document.getElementById('heatmap-container');
@@ -174,6 +192,7 @@
         initGrid();
 
         function getColor(value) {
+            // 防呆保護：如果數值異常大，限制在 0~1 之間計算顏色
             let v = value;
             if (isNaN(v) || !isFinite(v)) v = 0;
             v = Math.max(0.1, Math.min(1.0, v));
@@ -193,7 +212,7 @@
         const heatmapContainer = document.getElementById('heatmap-container');
 
         ble.on('connect', () => {
-            statusDisplay.textContent = "狀態: 已連線 (Row Packets)";
+            statusDisplay.textContent = "狀態: 已連線";
             statusDisplay.classList.add('status-connected');
             connectBtn.disabled = true; disconnectBtn.disabled = false;
         });
@@ -202,42 +221,53 @@
             statusDisplay.textContent = "狀態: 已斷線";
             statusDisplay.classList.remove('status-connected');
             connectBtn.disabled = false; disconnectBtn.disabled = true;
+            pendingBuffer = new Uint8Array(0);
         });
 
-        // ==========================================
-        //  全新邏輯：分行封包解析
-        // ==========================================
         ble.on('getData', (dataView) => {
-            // 1. 檢查封包長度是否正確 (125 bytes)
-            if (dataView.byteLength !== ROW_PACKET_SIZE) {
-                // 如果長度不對 (例如 244 或其他)，代表這是雜訊或不完整的包，直接丟棄
-                return;
+            const newChunk = new Uint8Array(dataView.buffer);
+            const newBuffer = new Uint8Array(pendingBuffer.length + newChunk.length);
+            newBuffer.set(pendingBuffer);
+            newBuffer.set(newChunk, pendingBuffer.length);
+            pendingBuffer = newBuffer;
+
+            while (pendingBuffer.length >= TOTAL_FRAME_SIZE) {
+                let headerIndex = -1;
+                for (let i = 0; i < pendingBuffer.length - 3; i++) {
+                    if (pendingBuffer[i]   === HEADER_SEQ[0] &&
+                        pendingBuffer[i+1] === HEADER_SEQ[1] &&
+                        pendingBuffer[i+2] === HEADER_SEQ[2] &&
+                        pendingBuffer[i+3] === HEADER_SEQ[3]) {
+                        headerIndex = i;
+                        break;
+                    }
+                }
+
+                if (headerIndex === -1) {
+                    if (pendingBuffer.length > TOTAL_FRAME_SIZE * 2) {
+                        pendingBuffer = pendingBuffer.slice(pendingBuffer.length - HEADER_SIZE);
+                    }
+                    return; 
+                }
+
+                if (headerIndex > 0) {
+                    pendingBuffer = pendingBuffer.slice(headerIndex);
+                    continue; 
+                }
+
+                if (pendingBuffer.length < TOTAL_FRAME_SIZE) return;
+
+                const payloadBytes = pendingBuffer.slice(HEADER_SIZE, TOTAL_FRAME_SIZE);
+                const frameDataView = new DataView(payloadBytes.buffer);
+
+                for (let i = 0; i < TOTAL_CELLS; i++) {
+                    rawMatrixData[i] = frameDataView.getFloat32(i * 4, true); 
+                }
+
+                updateHeatmap();
+                pendingBuffer = pendingBuffer.slice(TOTAL_FRAME_SIZE);
             }
-
-            // 2. 讀取行號 (第 0 個 byte)
-            const rowIndex = dataView.getUint8(0);
-
-            // 安全檢查：行號必須在 0~7 之間
-            if (rowIndex >= DATA_ROWS) return;
-
-            // 3. 計算該行在主陣列中的起始位置
-            const offset = rowIndex * DATA_COLS;
-
-            // 4. 解析後面的 31 個 float
-            // dataView 的第 1 個 byte 開始是數據
-            for (let c = 0; c < DATA_COLS; c++) {
-                // getFloat32(byteOffset, littleEndian)
-                // 1 + c*4 代表跳過 header (1 byte) 後的第 c 個 float
-                const val = dataView.getFloat32(1 + (c * 4), true);
-                rawMatrixData[offset + c] = val;
-            }
-
-            // 5. 每收到一行就嘗試更新畫面
-            // (requestAnimationFrame 會自動處理頻率，不會因為呼叫太頻繁而卡頓)
-            updateHeatmap();
         });
-
-        // ------------------------------------------
 
         connectBtn.addEventListener('click', async () => {
             try {
@@ -288,10 +318,14 @@
                     const dataIndex = getDataIndexByRotation(i);
                     const rawVal = rawMatrixData[dataIndex];
 
+                    // 1. 檢查 NaN 或 Infinity
                     if (isNaN(rawVal) || !isFinite(rawVal)) {
-                        cell.style.backgroundColor = 'white'; cell.textContent = ""; continue;
+                        cell.style.backgroundColor = 'white';
+                        cell.textContent = "NaN";
+                        continue;
                     }
 
+                    // 2. 故障代碼檢查
                     if (Math.abs(rawVal - 0) < 0.001 || Math.abs(rawVal - 16) < 0.001 || Math.abs(rawVal - 32) < 0.001) {
                         cell.className = 'cell error'; cell.textContent = Math.round(rawVal);
                         cell.style.backgroundColor = ''; cell.style.color = ''; continue;
@@ -301,14 +335,15 @@
                     if (isCalibrated && baselineData) { displayVal = Math.abs(rawVal - baselineData[dataIndex]); }
                     displayVal = displayVal * signalGain;
 
-                    // 數值顯示保護
+                    // 3. 數值鉗制 (Clamping) - 防止數字過大撐開版面
+                    // 假設超過 999 就算異常，強制顯示為 >999
                     let textToShow = "";
-                    if (displayVal > 999) textToShow = ">999";
-                    else if (displayVal < -999) textToShow = "<-999";
+                    if (displayVal > 99) textToShow = ">99";
+                    else if (displayVal < -99) textToShow = "<-99";
                     else textToShow = displayVal.toFixed(2);
 
                     cell.style.backgroundColor = getColor(displayVal);
-                    cell.textContent = "";textToShow;
+                    cell.textContent = textToShow;
                     cell.style.color = displayVal > 0.6 ? 'white' : 'transparent';
                 }
             });
