@@ -45,6 +45,7 @@ mapCtrl.on('set_pose_btn', ()=>{
     }else{
         mapCtrl.setPose(false);
         whatSet=0;
+        map.setCanDrag(false);
     }
 });
 mapCtrl.on('set_goal_btn', ()=>{
@@ -55,6 +56,7 @@ mapCtrl.on('set_goal_btn', ()=>{
     }else{
         mapCtrl.setGoal(false);
         whatSet=0;
+        map.setCanDrag(false);
     }
 });
 mapCtrl.on('add_way_btn', ()=>{
@@ -65,6 +67,7 @@ mapCtrl.on('add_way_btn', ()=>{
     }else{
         mapCtrl.setWay(false);
         whatSet=0;
+        map.setCanDrag(false);
     }
 });
 mapCtrl.on('remove_way_btn', ()=>{

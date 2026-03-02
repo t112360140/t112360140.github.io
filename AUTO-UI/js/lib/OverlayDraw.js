@@ -217,13 +217,10 @@ class ConnectState{
         this.start();
 
         if(this.canvas){
-            const rect = this.canvas.getBoundingClientRect();
-            window.addEventListener('mousemove', (e) => {
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                this.button.mouse={x, y};
-            });
-            this.canvas.addEventListener('click', ()=>{
+            window.addEventListener('pointermove', (e)=>{this.updatePointer(e)});
+            this.canvas.addEventListener('pointerup', (e)=>{
+                this.updatePointer(e);
+
                 if(this.button.connect_btn) this.event.connect_btn.forEach(F=>F());
                 if(this.button.ip_set) this.event.ip_set.forEach(F=>F());
             })
@@ -277,7 +274,6 @@ class ConnectState{
         if(!this.status.auto_connect){
             this.ctx.beginPath();
             this.ctx.fillStyle=(this.dist(this.button.mouse, {x:this.width-halfH*1.2, y:halfH})<=halfH*0.7)?'#b3b3b3':'#c6c6c6';
-            this.button.connect_btn=(this.dist(this.button.mouse, {x:this.width-halfH*1.2, y:halfH})<=halfH*0.7);
             this.ctx.strokeStyle='#bebebe';
             this.ctx.lineWidth=3;
             this.ctx.arc(this.width-halfH*1.2, halfH, halfH*0.7, 0, 2*Math.PI, true);
@@ -294,7 +290,6 @@ class ConnectState{
         if(this.status.auto_connect){
             this.ctx.beginPath();
             this.ctx.fillStyle=(this.dist(this.button.mouse, {x:this.width-halfH*1.2, y:halfH})<=halfH*0.7)?'#b3b3b3':'#c6c6c6';
-            this.button.ip_set=(this.dist(this.button.mouse, {x:this.width-halfH*1.2, y:halfH})<=halfH*0.7);
             this.ctx.strokeStyle='#bebebe';
             this.ctx.lineWidth=3;
             this.ctx.arc(this.width-halfH*1.2, halfH, halfH*0.7, 0, 2*Math.PI, true);
@@ -306,6 +301,19 @@ class ConnectState{
             this.ctx.font=`bold ${Math.floor(halfH*0.3)}pt sans-serif`;
             this.ctx.fillText('更改IP', this.width-halfH*1.17, halfH*1.05);
         }
+    }
+
+    updatePointer(e){
+        const rect = this.canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        this.button.mouse={x, y};
+
+        const halfH=this.height/2;
+        const halfW=this.width/2;
+
+        this.button.connect_btn=!this.status.auto_connect&&(this.dist(this.button.mouse, {x:this.width-halfH*1.2, y:halfH})<=halfH*0.7);
+        this.button.ip_set=this.status.auto_connect&&(this.dist(this.button.mouse, {x:this.width-halfH*1.2, y:halfH})<=halfH*0.7);
 
         this.canvas.style.cursor=(
             (this.dist(this.button.mouse, {x:this.width-halfH*1.2, y:halfH})<=halfH*0.7)
@@ -386,13 +394,10 @@ class StatusDraw{
         this.start();
 
         if(this.canvas){
-            const rect = this.canvas.getBoundingClientRect();
-            window.addEventListener('mousemove', (e) => {
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                this.button.mouse={x, y};
-            });
-            this.canvas.addEventListener('click', ()=>{
+            window.addEventListener('pointermove', (e)=>{this.updatePointer(e)});
+            this.canvas.addEventListener('pointerup', (e)=>{
+                this.updatePointer(e);
+
                 if(this.modeStatus.is_stop_mode_available&&this.button.stop_btn) this.event.stop_btn.forEach(F=>F());
                 else if(this.modeStatus.is_local_mode_available&&this.button.local_btn) this.event.local_btn.forEach(F=>F());
                 else if(this.modeStatus.is_remote_mode_available&&this.button.remote_btn) this.event.remote_btn.forEach(F=>F());
@@ -446,7 +451,6 @@ class StatusDraw{
         
         this.ctx.beginPath();
         this.ctx.fillStyle=(this.modeStatus.is_autonomous_mode_available&&this.dist(this.button.mouse, {x:W_5, y:halfHalfH})<=halfHalfH*0.7)?'#b3b3b3':'#c6c6c6';
-        this.button.auto_btn=(this.modeStatus.is_autonomous_mode_available&&this.dist(this.button.mouse, {x:W_5, y:halfHalfH})<=halfHalfH*0.7);
         this.ctx.strokeStyle=this.modeStatus.mode==2?'#3535fd':'#bebebe';
         this.ctx.lineWidth=3;
         this.ctx.arc(W_5, halfHalfH, halfHalfH*0.7, 0, 2*Math.PI, true);
@@ -460,7 +464,6 @@ class StatusDraw{
         
         this.ctx.beginPath();
         this.ctx.fillStyle=(this.modeStatus.is_remote_mode_available&&this.dist(this.button.mouse, {x:W_5*2, y:halfHalfH})<=halfHalfH*0.7)?'#b3b3b3':'#c6c6c6';
-        this.button.remote_btn=(this.modeStatus.is_remote_mode_available&&this.dist(this.button.mouse, {x:W_5*2, y:halfHalfH})<=halfHalfH*0.7);
         this.ctx.strokeStyle=this.modeStatus.mode==4?'#3535fd':'#bebebe';
         this.ctx.lineWidth=3;
         this.ctx.arc(W_5*2, halfHalfH, halfHalfH*0.7, 0, 2*Math.PI, true);
@@ -474,7 +477,6 @@ class StatusDraw{
         
         this.ctx.beginPath();
         this.ctx.fillStyle=(this.modeStatus.is_local_mode_available&&this.dist(this.button.mouse, {x:W_5*3, y:halfHalfH})<=halfHalfH*0.7)?'#b3b3b3':'#c6c6c6';
-        this.button.local_btn=(this.modeStatus.is_local_mode_available&&this.dist(this.button.mouse, {x:W_5*3, y:halfHalfH})<=halfHalfH*0.7);
         this.ctx.strokeStyle=this.modeStatus.mode==3?'#3535fd':'#bebebe';
         this.ctx.lineWidth=3;
         this.ctx.arc(W_5*3, halfHalfH, halfHalfH*0.7, 0, 2*Math.PI, true);
@@ -488,7 +490,6 @@ class StatusDraw{
         
         this.ctx.beginPath();
         this.ctx.fillStyle=(this.modeStatus.is_stop_mode_available&&this.dist(this.button.mouse, {x:W_5*4, y:halfHalfH})<=halfHalfH*0.7)?'#b3b3b3':'#c6c6c6';
-        this.button.stop_btn=(this.modeStatus.is_stop_mode_available&&this.dist(this.button.mouse, {x:W_5*4, y:halfHalfH})<=halfHalfH*0.7);
         this.ctx.strokeStyle=this.modeStatus.mode==1?'#3535fd':'#bebebe';
         this.ctx.lineWidth=3;
         this.ctx.arc(W_5*4, halfHalfH, halfHalfH*0.7, 0, 2*Math.PI, true);
@@ -502,7 +503,6 @@ class StatusDraw{
         
         this.ctx.beginPath();
         this.ctx.fillStyle=(this.dist(this.button.mouse, {x:W_5*3, y:this.height-halfHalfH})<=halfHalfH*0.7)?'#b3b3b3':'#c6c6c6';
-        this.button.clear_route_btn=(this.dist(this.button.mouse, {x:W_5*3, y:this.height-halfHalfH})<=halfHalfH*0.7);
         this.ctx.strokeStyle='#bebebe';
         this.ctx.lineWidth=3;
         this.ctx.arc(W_5*3, this.height-halfHalfH, halfHalfH*0.7, 0, 2*Math.PI, true);
@@ -514,13 +514,7 @@ class StatusDraw{
         this.ctx.font=`bold ${Math.floor(halfHalfH*0.3)}pt sans-serif`;
         this.ctx.fillText('清除', W_5*3, this.height-halfHalfH*0.95-halfHalfH*0.2);
         this.ctx.fillText('路線', W_5*3, this.height-halfHalfH*0.95+halfHalfH*0.2);
-        
-        this.canvas.style.cursor=(
-            (this.modeStatus.is_autonomous_mode_available&&this.dist(this.button.mouse, {x:W_5, y:halfHalfH})<=halfHalfH*0.7)||
-            (this.modeStatus.is_remote_mode_available&&this.dist(this.button.mouse, {x:W_5*2, y:halfHalfH})<=halfHalfH*0.7)||
-            (this.modeStatus.is_local_mode_available&&this.dist(this.button.mouse, {x:W_5*3, y:halfHalfH})<=halfHalfH*0.7)||
-            (this.modeStatus.is_stop_mode_available&&this.dist(this.button.mouse, {x:W_5*4, y:halfHalfH})<=halfHalfH*0.7)||
-            (this.dist(this.button.mouse, {x:W_5*3, y:this.height-halfHalfH})<=halfHalfH*0.7))?'pointer':'default';
+
 
         const route_color=['#bebebe', '#bebebe', '#3535fd', '#00ff00', '#ffff50'];
         const route_text=['未知', '未設定', '已設定', '已抵達', '更改中'];
@@ -566,6 +560,34 @@ class StatusDraw{
         this.ctx.font=`bold ${Math.floor(halfHalfH*0.3)}pt sans-serif`;
         this.ctx.fillText(control_mode_text[this.status.control_mode][0], W_5*4, this.height-halfHalfH*0.95-halfHalfH*0.2);
         this.ctx.fillText(control_mode_text[this.status.control_mode][1], W_5*4, this.height-halfHalfH*0.95+halfHalfH*0.2);
+    }
+
+    updatePointer(e){
+        const rect = this.canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        this.button.mouse={x, y};
+
+        const halfH=this.height/2;
+        const halfW=this.width/2;
+        const halfHalfH=halfH/2;
+        const halfHalfW=halfW/2;
+        const W_5=this.width/5;
+
+        this.button.auto_btn=(this.modeStatus.is_autonomous_mode_available&&this.dist(this.button.mouse, {x:W_5, y:halfHalfH})<=halfHalfH*0.7);
+        this.button.remote_btn=(this.modeStatus.is_remote_mode_available&&this.dist(this.button.mouse, {x:W_5*2, y:halfHalfH})<=halfHalfH*0.7);
+        this.button.local_btn=(this.modeStatus.is_local_mode_available&&this.dist(this.button.mouse, {x:W_5*3, y:halfHalfH})<=halfHalfH*0.7);
+        this.button.stop_btn=(this.modeStatus.is_stop_mode_available&&this.dist(this.button.mouse, {x:W_5*4, y:halfHalfH})<=halfHalfH*0.7);
+        this.button.clear_route_btn=(this.dist(this.button.mouse, {x:W_5*3, y:this.height-halfHalfH})<=halfHalfH*0.7);
+
+        
+        this.canvas.style.cursor=(
+            (this.modeStatus.is_autonomous_mode_available&&this.dist(this.button.mouse, {x:W_5, y:halfHalfH})<=halfHalfH*0.7)||
+            (this.modeStatus.is_remote_mode_available&&this.dist(this.button.mouse, {x:W_5*2, y:halfHalfH})<=halfHalfH*0.7)||
+            (this.modeStatus.is_local_mode_available&&this.dist(this.button.mouse, {x:W_5*3, y:halfHalfH})<=halfHalfH*0.7)||
+            (this.modeStatus.is_stop_mode_available&&this.dist(this.button.mouse, {x:W_5*4, y:halfHalfH})<=halfHalfH*0.7)||
+            (this.dist(this.button.mouse, {x:W_5*3, y:this.height-halfHalfH})<=halfHalfH*0.7)
+        )?'pointer':'default';
     }
 
     setModeStatus(msg){
@@ -632,7 +654,7 @@ class MissionState{
 
         if(this.canvas){
             const rect = this.canvas.getBoundingClientRect();
-            window.addEventListener('mousemove', (e) => {
+            window.addEventListener('pointermove', (e) => {
                 const x = e.clientX - rect.left;
                 const y = e.clientY - rect.top;
                 this.button.mouse={x, y};
@@ -868,13 +890,10 @@ class MapCtrl{
         this.start();
 
         if(this.canvas){
-            const rect = this.canvas.getBoundingClientRect();
-            window.addEventListener('mousemove', (e) => {
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                this.button.mouse={x, y};
-            });
-            this.canvas.addEventListener('click', ()=>{
+            window.addEventListener('pointermove', (e)=>{this.updatePointer(e)});
+            this.canvas.addEventListener('click', (e)=>{
+                this.updatePointer(e);
+
                 if(this.button.set_pose_btn) this.event.set_pose_btn.forEach(F=>F());
                 else if(this.button.set_goal_btn) this.event.set_goal_btn.forEach(F=>F());
                 else if(this.button.add_way_btn) this.event.add_way_btn.forEach(F=>F());
@@ -928,7 +947,6 @@ class MapCtrl{
 
         this.ctx.beginPath();
         this.ctx.fillStyle=(this.dist(this.button.mouse, {x:W_4, y:H_7*1.5})<=W_4*0.7)?'#b3b3b3':'#c6c6c6';
-        this.button.set_pose_btn=!(this.status.set_goal||this.status.add_way)&&(this.dist(this.button.mouse, {x:W_4, y:H_7*1.5})<=W_4*0.7);
         if(this.status.pose_inited==2) this.ctx.strokeStyle='#4f4fff';
         else if(this.status.pose_inited==3) this.ctx.strokeStyle='#4fff4f';
         else this.ctx.strokeStyle='#ff4f4f';
@@ -945,7 +963,6 @@ class MapCtrl{
 
         this.ctx.beginPath();
         this.ctx.fillStyle=(this.dist(this.button.mouse, {x:W_4*3, y:H_7*1.5})<=W_4*0.7)?'#b3b3b3':'#c6c6c6';
-        this.button.set_goal_btn=!(this.status.set_pose||this.status.add_way)&&(this.dist(this.button.mouse, {x:W_4*3, y:H_7*1.5})<=W_4*0.7);
         this.ctx.strokeStyle='#bebebe';
         this.ctx.lineWidth=3;
         this.ctx.arc(W_4*3, H_7*1.5, W_4*0.7, 0, 2*Math.PI, true);
@@ -960,7 +977,6 @@ class MapCtrl{
 
         this.ctx.beginPath();
         this.ctx.fillStyle=(this.dist(this.button.mouse, {x:W_4, y:H_7*5.5})<=W_4*0.7)?'#b3b3b3':'#c6c6c6';
-        this.button.set_follow_btn=(this.dist(this.button.mouse, {x:W_4, y:H_7*5.5})<=W_4*0.7);
         this.ctx.strokeStyle='#bebebe';
         this.ctx.lineWidth=3;
         this.ctx.arc(W_4, H_7*5.5, W_4*0.7, 0, 2*Math.PI, true);
@@ -975,7 +991,6 @@ class MapCtrl{
 
         this.ctx.beginPath();
         this.ctx.fillStyle=(this.dist(this.button.mouse, {x:W_4*3, y:H_7*5.5})<=W_4*0.7)?'#b3b3b3':'#c6c6c6';
-        this.button.set_draw_map_btn=(this.dist(this.button.mouse, {x:W_4*3, y:H_7*5.5})<=W_4*0.7);
         this.ctx.strokeStyle=this.status.drawMap?'#4fff4f':'#4f4fff';
         this.ctx.lineWidth=3;
         this.ctx.arc(W_4*3, H_7*5.5, W_4*0.7, 0, 2*Math.PI, true);
@@ -990,7 +1005,6 @@ class MapCtrl{
 
         this.ctx.beginPath();
         this.ctx.fillStyle=(this.dist(this.button.mouse, {x:W_4*1, y:H_7*3.5})<=W_4*0.7)?'#b3b3b3':'#c6c6c6';
-        this.button.add_way_btn=!(this.status.set_pose||this.status.set_goal)&&(this.dist(this.button.mouse, {x:W_4*1, y:H_7*3.5})<=W_4*0.7);
         if(this.status.pose_inited==2) this.ctx.strokeStyle='#4f4fff';
         this.ctx.strokeStyle='#bebebe';
         this.ctx.lineWidth=3;
@@ -1006,7 +1020,6 @@ class MapCtrl{
 
         this.ctx.beginPath();
         this.ctx.fillStyle=(this.dist(this.button.mouse, {x:W_4*3, y:H_7*3.5})<=W_4*0.7)?'#b3b3b3':'#c6c6c6';
-        this.button.remove_way_btn=(this.dist(this.button.mouse, {x:W_4*3, y:H_7*3.5})<=W_4*0.7);
         this.ctx.strokeStyle='#bebebe';
         this.ctx.lineWidth=3;
         this.ctx.arc(W_4*3, H_7*3.5, W_4*0.7, 0, 2*Math.PI, true);
@@ -1018,6 +1031,26 @@ class MapCtrl{
         this.ctx.font=`bold ${Math.floor(W_4*0.3)}pt sans-serif`;
         this.ctx.fillText('清除', W_4*3, H_7*3.5-W_4*0.2);
         this.ctx.fillText('航點', W_4*3, H_7*3.5+W_4*0.2);
+    }
+
+    updatePointer(e){
+        const rect = this.canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        this.button.mouse={x, y};
+
+        const halfH=this.height/2;
+        const halfW=this.width/2;
+        const H_7=this.height/7;
+        const W_4=this.width/4;
+
+        this.button.set_pose_btn=!(this.status.set_goal||this.status.add_way)&&(this.dist(this.button.mouse, {x:W_4, y:H_7*1.5})<=W_4*0.7);
+        this.button.set_goal_btn=!(this.status.set_pose||this.status.add_way)&&(this.dist(this.button.mouse, {x:W_4*3, y:H_7*1.5})<=W_4*0.7);
+        this.button.set_follow_btn=(this.dist(this.button.mouse, {x:W_4, y:H_7*5.5})<=W_4*0.7);
+        this.button.set_draw_map_btn=(this.dist(this.button.mouse, {x:W_4*3, y:H_7*5.5})<=W_4*0.7);
+        this.button.add_way_btn=!(this.status.set_pose||this.status.set_goal)&&(this.dist(this.button.mouse, {x:W_4*1, y:H_7*3.5})<=W_4*0.7);
+        this.button.remove_way_btn=(this.dist(this.button.mouse, {x:W_4*3, y:H_7*3.5})<=W_4*0.7);
+
         
         this.canvas.style.cursor=(
             (!(this.status.set_goal||this.status.add_way)&&this.dist(this.button.mouse, {x:W_4, y:H_7*1.5})<=W_4*0.7)||
