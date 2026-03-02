@@ -9,11 +9,15 @@ class RemoteCtrl{
         this.turnIndicatorsTopic=null;
         this.hazardLightsTopic=null;
 
+        this.velocity_kinematics=null;
+        this.velocity_status=null;
+        this.vehicle_status=null;
+
         this.throttle=0;
         this.brake=0;
         this.angle=0;
 
-        this.THROTTLE_SCALE=1;
+        this.THROTTLE_SCALE=0.15;
         this.MAX_STEER=45*(Math.PI/180);
 
         this.turnIndicators=1;
@@ -23,6 +27,16 @@ class RemoteCtrl{
         this.remoteStart=false;
         this.interval=null;
         this.delay=100;
+
+        this.effectInterval=null;
+        this.effectDelay=30;
+        this.velo=0;
+        this.last_velo=0;
+        this.last_velo_time=0;
+        this.accel=0;
+        this.steering=0;
+        this.gear_change=0;
+        this.last_gear=4;
 
         this.hasGamepads=false;
         window.addEventListener("gamepadconnected", (event)=>{
@@ -132,6 +146,7 @@ class RemoteCtrl{
             }, this.delay);
             this.remoteStart=true;
         }
+        this.startEffect();
     }
 
     async stop(){
@@ -141,10 +156,63 @@ class RemoteCtrl{
         this.interval=null;
 
         this.throttle=0;
+        this.brake=0;
         this.angle=0;
+
+        this.stopEffect();
 
         await modeChangeToStop();
         await this.control_mode_select(1);
+    }
+    
+    setVelo(velo){
+        this.velo=velo;
+
+        const time=new Date().getTime();
+        this.accel=(this.velo-this.last_velo)/(time-this.last_velo_time);
+        this.last_velo=this.velo;
+        this.last_velo_time=time;
+    }
+    setSteering(steering){
+        this.steering=steering;
+    }
+
+    startEffect(){
+        const MAX_VELO=50;
+        if(!this.effectInterval){
+            this.effectInterval=setInterval(()=>{
+                const gamepads=navigator.getGamepads();
+                if(!gamepads) return;
+
+                if((this.last_gear!=this.gear)) this.gear_change=3;
+                const weak=Math.min(Math.max(0, 
+                    this.velo*(3.6/MAX_VELO)*0.8,
+                    Math.abs(this.velo*(3.6/MAX_VELO)*this.steering)*6,
+                    (this.gear_change>0)?1:0,
+                ), 1);
+                const strong=Math.min(Math.max(0, 
+                    Math.abs(this.accel*50),
+                    (this.gear_change>0)?1:0,
+                ), 1);
+                this.last_gear=this.gear;
+                if(this.gear_change>0) this.gear_change--;
+
+                if(gamepads[0]){
+                    gamepads[0].vibrationActuator
+                    .playEffect("dual-rumble", {
+                        startDelay: 0,
+                        duration: this.effectDelay*2,
+                        weakMagnitude: weak,
+                        strongMagnitude: strong,
+                    });
+                }
+            }, this.effectDelay)
+        }
+    }
+    stopEffect(){
+        if(this.effectInterval)
+            clearInterval(this.effectInterval);
+        this.effectInterval=null;
     }
 
     setRos(ros){
@@ -183,6 +251,23 @@ class RemoteCtrl{
             ros: this.ros,
             name: "/api/manual/remote/command/hazard_lights",
             messageType: "autoware_adapi_v1_msgs/msg/HazardLightsCommand",
+        });
+
+        this.velocity_status = new ROSLIB.Topic({
+            ros: ros,
+            name: "/vehicle/status/velocity_status",
+            messageType: "autoware_vehicle_msgs/msg/VelocityReport",
+        });
+        this.velocity_status.subscribe((msg)=>{
+            this.setVelo(msg.longitudinal_velocity);
+        });
+        this.vehicle_status = new ROSLIB.Topic({
+            ros: ros,
+            name: "/api/vehicle/status",
+            messageType: "autoware_adapi_v1_msgs/msg/VehicleStatus",
+        });
+        this.vehicle_status.subscribe((msg)=>{
+            this.setSteering(msg.steering_tire_angle);
         });
     }
 
