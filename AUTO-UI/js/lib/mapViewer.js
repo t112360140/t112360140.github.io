@@ -49,6 +49,10 @@ class MapViewer {
             lng: 0,
             active: false
         }
+        this.GeoOffset={
+            lat: 0,
+            lng: 0,
+        }
 
         this.enableBackgroundMap = false;
         this.tileCache = {}; // 快取下載過的圖片: "z_x_y" -> Image Object
@@ -161,7 +165,10 @@ class MapViewer {
     }
 
     updateVehicleGoe(lat, lng) {        
-        this.vehicleGeo = { lat, lng, active: (lat!=null&&lng!=null) };
+        this.vehicleGeo = {
+            lat: lat+this.GeoOffset.lat,
+            lng: lng+this.GeoOffset.lng,
+            active: (lat!=null&&lng!=null) };
     }
 
     setBackgroundMap(enable=false){
@@ -809,6 +816,8 @@ class MapViewer {
         const drawSize = tileSizeInMeters * this.zoom + 0.6;
         const { cx, cy } = this.mapBounds; // 取得地圖中心點
 
+        // ctx.filter = 'brightness(50%)';
+
         for (let x = minTileX; x <= maxTileX; x++) {
             for (let y = minTileY; y <= maxTileY; y++) {
                 const key = `${tileZoom}_${x}_${y}`;
@@ -849,6 +858,7 @@ class MapViewer {
                 }
             }
         }
+        // ctx.filter = 'none';
     }
 
     // 繪製動態物件
@@ -1384,6 +1394,7 @@ function getMap(){
         ros: ros,
         name: "/map/vector_map_marker",
         messageType: "visualization_msgs/msg/MarkerArray",
+        compression: isLocal()?"none":"cbor",
     });
     getMap.subscribe(function (msg){
         // console.log(msg);

@@ -28,6 +28,10 @@ setTimeout(()=>{
     if(DELAY_TIME>=0) connect();
 }, 100);
 
+function isLocal(){
+    return /ws{1,2}:\/\/(127.0.0.1|localhost):\d*$/.test(WS_IP);
+}
+
 var vehicle_mode_state=new StatusDraw('vehicle-mode-state', 128, 256);
 vehicle_mode_state.on('stop_btn', modeChangeToStop);
 vehicle_mode_state.on('local_btn', modeChangeToLocal);
@@ -341,6 +345,7 @@ function setSub(){
         ros: ros,
         name: "/api/perception/objects",
         messageType: "autoware_adapi_v1_msgs/msg/DynamicObjectArray",
+        compression: isLocal()?"none":"cbor",
     });
     perception_objects.subscribe(function (msg){
         map.updateObstacles(msg);
