@@ -150,13 +150,13 @@ function getStamp(){
     return { secs, nsecs };
 }
 
+let inited=false;
 function setSub(){
     map.clearVehicle();
     map.clearPredictedPath();
     map.clearGoalPoint();
     map.clearObstacles();
     map.clearFactor();
-    getMap();
 
     mapCtrl.setPoseInited(0);
 
@@ -169,6 +169,11 @@ function setSub(){
             });
         }, 1000);
     });
+
+    if(inited) return;
+    inited=true;
+    
+    getMap();
 
     remoteCtrl.setRos(ros);
 
