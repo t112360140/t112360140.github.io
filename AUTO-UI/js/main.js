@@ -42,7 +42,7 @@ vehicle_mode_state.on('clear_route_btn', clearRoute);
 var whatSet=0;
 var mapCtrl=new MapCtrl('map-ctrl', 180, 128);
 mapCtrl.on('set_pose_btn', ()=>{
-    if(whatSet==0){
+    if(whatSet==0&&!mapCtrl.isFolowMode()){
         mapCtrl.setPose(true);
         whatSet=1;
         map.setCanDrag(true);
@@ -53,7 +53,7 @@ mapCtrl.on('set_pose_btn', ()=>{
     }
 });
 mapCtrl.on('set_goal_btn', ()=>{
-    if(whatSet==0){
+    if(whatSet==0&&!mapCtrl.isFolowMode()){
         mapCtrl.setGoal(true);
         whatSet=2;
         map.setCanDrag(true);
@@ -64,7 +64,7 @@ mapCtrl.on('set_goal_btn', ()=>{
     }
 });
 mapCtrl.on('add_way_btn', ()=>{
-    if(whatSet==0){
+    if(whatSet==0&&!mapCtrl.isFolowMode()){
         mapCtrl.setWay(true);
         whatSet=3;
         map.setCanDrag(true);
@@ -92,7 +92,7 @@ mapCtrl.on('set_draw_map_btn', ()=>{
 
 var map=new MapViewer('map', document.body.offsetHeight, document.body.offsetWidth);
 window.addEventListener('resize', ()=>{map.resize(document.body.offsetHeight, document.body.offsetWidth)});
-map.on('drag', (x, y, yaw, shift)=>{
+map.on('drag', async (x, y, yaw, shift)=>{
     if(whatSet==2){
         if(vehicle_mode_state.getRouteStatus()==2) changeRoute(x, y, yaw, map.getWayPoint());
         else setRoute(x, y, yaw, map.getWayPoint());
@@ -194,10 +194,11 @@ function setSub(){
         ros: ros,
         name: "/tf",
         messageType: "tf2_msgs/msg/TFMessage",
+        throttle_rate: Math.floor(tfInterval),
     });
     tfClient.subscribe(function (msg) {
         const now=new Date().getTime();
-        if ((now-lastTFGetTime) < tfInterval) return;
+        // if ((now-lastTFGetTime) < tfInterval) return;
         lastTFGetTime = now;
         let tf=null;
         msg.transforms.forEach((t) => {
@@ -278,6 +279,7 @@ function setSub(){
     });
     routing_state.subscribe(function (msg){
         vehicle_mode_state.setRouteState(msg.state);
+        map.setShowPath(msg.state===2);
     });
     let routing_route = new ROSLIB.Topic({
         ros: ros,
@@ -292,10 +294,42 @@ function setSub(){
         ros: ros,
         name: "/planning/scenario_planning/lane_driving/behavior_planning/path",
         messageType: "autoware_planning_msgs/msg/Path",
+        compression: isLocal()?"none":"cbor",
+        throttle_rate: 750,
     });
     planning_path.subscribe(function (msg){
         map.updatePredictedPath(msg.points.map(P=>P.pose.position));
     });
+    // let planning_trajectory = new ROSLIB.Topic({
+    //     ros: ros,
+    //     name: "/planning/scenario_planning/lane_driving/trajectory",
+    //     messageType: "autoware_planning_msgs/msg/Trajectory",
+    //     compression: isLocal()?"none":"cbor",
+    //     throttle_rate: 750,
+    // });
+    // planning_trajectory.subscribe(function (msg){
+    //     map.updatePredictedPath(msg.points.map(P=>P.pose.position));
+    // });
+    let planning_parking_trajectory = new ROSLIB.Topic({
+        ros: ros,
+        name: "/planning/scenario_planning/parking/trajectory",
+        messageType: "autoware_planning_msgs/msg/Trajectory",
+        compression: isLocal()?"none":"cbor",
+        throttle_rate: 750,
+    });
+    planning_parking_trajectory.subscribe(function (msg){
+        map.updatePredictedPath(msg.points.map(P=>P.pose.position));
+    });
+    // let planning_trajectory_short = new ROSLIB.Topic({
+    //     ros: ros,
+    //     name: "/planning/scenario_planning/trajectory",
+    //     messageType: "autoware_planning_msgs/msg/Trajectory",
+    //     compression: isLocal()?"none":"cbor",
+    //     throttle_rate: 750,
+    // });
+    // planning_trajectory_short.subscribe(function (msg){
+    //     map.updatePredictedPath(msg.points.map(P=>P.pose.position));
+    // });
     
     let operation_mode = new ROSLIB.Topic({
         ros: ros,
@@ -345,7 +379,7 @@ function setSub(){
         ros: ros,
         name: "/api/perception/objects",
         messageType: "autoware_adapi_v1_msgs/msg/DynamicObjectArray",
-        compression: isLocal()?"none":"cbor",
+        // compression: isLocal()?"none":"cbor",
     });
     perception_objects.subscribe(function (msg){
         map.updateObstacles(msg);

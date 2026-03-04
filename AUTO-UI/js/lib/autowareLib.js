@@ -31,6 +31,7 @@ function setInitPose(x=0, y=0, yaw=0){
 
 function clearRoute(){
     return new Promise((resolve, reject) => {
+        console.log('start clear route!');
         const service = new ROSLIB.Service({
             ros: ros,
             name: '/api/routing/clear_route',
@@ -53,6 +54,7 @@ function setRoute(x=0, y=0, yaw=0, waypoints=[]){
         orientation: { x: 0.0, y: 0.0, z: Math.sin(pose.yaw/2), w: Math.cos(pose.yaw/2) }
     }));
     return new Promise(async (resolve, reject) => {
+        console.log('start set route!');
         try{
             await clearRoute();
             const service = new ROSLIB.Service({
@@ -90,6 +92,7 @@ function changeRoute(x=0, y=0, yaw=0, waypoints=[]){
         orientation: { x: 0.0, y: 0.0, z: Math.sin(pose.yaw/2), w: Math.cos(pose.yaw/2) }
     }));
     return new Promise(async (resolve, reject) => {
+        console.log('start change route!');
         try{
             const service = new ROSLIB.Service({
                 ros: ros,
@@ -122,6 +125,7 @@ function changeRoute(x=0, y=0, yaw=0, waypoints=[]){
 
 function modeChangeToAutonomous(){
     return new Promise((resolve, reject) => {
+        console.log('start change to autonomous!');
         const service = new ROSLIB.Service({
             ros: ros,
             name: '/api/operation_mode/change_to_autonomous',
@@ -140,6 +144,7 @@ function modeChangeToAutonomous(){
 
 function modeChangeToStop(){
     return new Promise((resolve, reject) => {
+        console.log('start change to stop!');
         const service = new ROSLIB.Service({
             ros: ros,
             name: '/api/operation_mode/change_to_stop',
@@ -158,6 +163,7 @@ function modeChangeToStop(){
 
 function modeChangeToLocal(){
     return new Promise((resolve, reject) => {
+        console.log('start change to local!');
         const service = new ROSLIB.Service({
             ros: ros,
             name: '/api/operation_mode/change_to_local',
@@ -176,6 +182,7 @@ function modeChangeToLocal(){
 
 function modeChangeToRemote(){
     return new Promise((resolve, reject) => {
+        console.log('start change to remote!');
         const service = new ROSLIB.Service({
             ros: ros,
             name: '/api/operation_mode/change_to_remote',
@@ -194,6 +201,7 @@ function modeChangeToRemote(){
 
 function enableAutowareControl(){
     return new Promise((resolve, reject) => {
+        console.log('start enable autoware control!');
         const service = new ROSLIB.Service({
             ros: ros,
             name: '/api/operation_mode/enable_autoware_control',
@@ -212,6 +220,7 @@ function enableAutowareControl(){
 
 function disableAutowareControl(){
     return new Promise((resolve, reject) => {
+        console.log('start disable autoware control!');
         const service = new ROSLIB.Service({
             ros: ros,
             name: '/api/operation_mode/disable_autoware_control',
@@ -230,6 +239,7 @@ function disableAutowareControl(){
 
 function getVehicleDimensions(){
     return new Promise((resolve, reject) => {
+        console.log('start get vehicle dimensions!');
         const service = new ROSLIB.Service({
             ros: ros,
             name: '/api/vehicle/dimensions',
@@ -248,6 +258,7 @@ function getVehicleDimensions(){
 
 function resetDiagnostics(){
     return new Promise((resolve, reject) => {
+        console.log('start reset diagnostics!');
         const service = new ROSLIB.Service({
             ros: ros,
             name: '/api/system/diagnostics/reset',

@@ -26,7 +26,7 @@ class MapViewer {
             'center_line_arrows',
             'center_lane_line',
             'lanelet_id',
-            'parking_lots',
+            // 'parking_lots',
         ];
 
         // 離屏畫布 (Offscreen Canvas) - 用於預渲染靜態地圖
@@ -73,6 +73,7 @@ class MapViewer {
         this.MAX_PATH_COUNT = 250; // 限制軌跡點數量，避免過長
 
         this.predictedPath = [];
+        this.showPath = false;
 
         this.goalPoint=null;
 
@@ -198,6 +199,10 @@ class MapViewer {
     // --- API: 更新預定路徑 ---
     updatePredictedPath(pathArray) {
         this.predictedPath = pathArray || [];
+    }
+
+    setShowPath(enable=false){
+        this.showPath=enable;
     }
 
     // --- API: 清除預定路徑 ---
@@ -626,8 +631,8 @@ class MapViewer {
             let colorStr = useVertexColors ? this.toRGBA(colors[i]) : ctx.fillStyle;
             ctx.fillStyle = colorStr;
             ctx.fill();
-            ctx.strokeStyle = colorStr;
-            ctx.stroke();
+            // ctx.strokeStyle = colorStr;
+            // ctx.stroke();
         }
     }
 
@@ -875,7 +880,7 @@ class MapViewer {
         const toLocalY = (wy) => -(wy - cy) * this.zoom; 
 
         // 畫預定路徑
-        if (this.predictedPath.length > 1) {
+        if (this.showPath&&this.predictedPath.length > 1) {
             ctx.beginPath();
             ctx.strokeStyle = '#FF0000';
             ctx.lineWidth = 2;
@@ -1399,8 +1404,8 @@ function getMap(){
         compression: isLocal()?"none":"cbor",
     });
     getMap.subscribe(function (msg){
-        // console.log(msg);
+        console.log(msg);
         map.updateMarkerArray(msg);
-        getMap.unsubscribe();
+        // getMap.unsubscribe();
     });
 }
