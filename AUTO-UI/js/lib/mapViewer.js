@@ -22,9 +22,11 @@ class MapViewer {
         this.filter = [
             'lanelet direction',
             'road_lanelets',
+            'lane_start_bound',
             'center_line_arrows',
             'center_lane_line',
             'lanelet_id',
+            'parking_lots',
         ];
 
         // 離屏畫布 (Offscreen Canvas) - 用於預渲染靜態地圖
